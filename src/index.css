@@ -75,7 +75,7 @@ button { font: inherit; }
 .mars .planet { position: absolute; width: 150px; height: 77px; bottom: 10px; left: 0; border-radius: 100% 100% 12px 12px; background: linear-gradient(160deg, #9e4328, #351d19); border-top: 2px solid var(--orange); clip-path: polygon(0 25%, 100% 0, 100% 100%, 0 100%); }
 .dome { position: absolute; bottom: 45px; border: 2px solid #ffd7bd; border-bottom: 5px solid #ffc3a0; border-radius: 50% 50% 5px 5px; background: rgba(255,122,61,.17); box-shadow: inset 0 0 18px rgba(255,122,61,.25); }.d1 { width: 66px; height: 51px; left: 30px; }.d2 { width: 43px; height: 33px; left: 92px; }
 .rocket { position: absolute; left: 122px; top: 0; transform: rotate(23deg); font-size: 32px; color: #d8e4e9; }.rocket i { display: block; width: 9px; height: 34px; margin: -8px auto; background: linear-gradient(var(--orange), transparent); clip-path: polygon(50% 100%,0 0,100% 0); }.orbit { position: absolute; width: 150px; height: 100px; border-top: 1px dashed rgba(255,122,61,.45); border-radius: 50%; transform: rotate(-25deg); left: 5px; top: 13px; }
-.cryptic { display: grid; place-items: center; }.cryptic .binary { position: absolute; border: 1px dashed #5b8dff; color: #7098ff; border-radius: 50%; display: grid; place-items: center; font: 7px "Space Mono"; letter-spacing: 4px; }.ring-one { width: 145px; height: 145px; transform: rotate(18deg); }.ring-two { width: 108px; height: 108px; transform: rotate(-22deg); }.lock-body { width: 62px; height: 72px; background: linear-gradient(150deg, #759bff, #314c9b); clip-path: polygon(16% 0,84% 0,100% 18%,100% 82%,84% 100%,16% 100%,0 82%,0 18%); display: grid; place-items: center; color: white; z-index: 2; }
+.game-art.cryptic { display: grid; place-items: center; }.cryptic .binary { position: absolute; border: 1px dashed #5b8dff; color: #7098ff; border-radius: 50%; display: grid; place-items: center; font: 7px "Space Mono"; letter-spacing: 4px; }.ring-one { width: 145px; height: 145px; transform: rotate(18deg); }.ring-two { width: 108px; height: 108px; transform: rotate(-22deg); }.lock-body { width: 62px; height: 72px; background: linear-gradient(150deg, #759bff, #314c9b); clip-path: polygon(16% 0,84% 0,100% 18%,100% 82%,84% 100%,16% 100%,0 82%,0 18%); display: grid; place-items: center; color: white; z-index: 2; }
 .lower-grid { display: grid; grid-template-columns: 1.2fr 1.15fr .82fr; gap: 14px; margin-top: 14px; }
 .panel { background: rgba(13,26,36,.86); border: 1px solid var(--line); }
 .feed-panel, .analytics-panel { min-height: 235px; padding: 15px 17px; }.panel-heading { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--line); }.panel-heading > span:first-child { display: flex; flex-direction: column-reverse; gap: 4px; }.panel-heading small { font: 7px "Space Mono"; color: var(--muted); letter-spacing: .8px; }.panel-heading strong { font-size: 14px; }
@@ -176,3 +176,16 @@ button { font: inherit; }
 .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 4px 0 #1f3f9e; }
 .btn-primary:hover { background: #5583ff; }
 .btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 #1f3f9e; }
+
+/* Card 04 — TINY Math Bingo */
+.games-grid { grid-template-columns: repeat(2, 1fr); }
+.game-card.bingo { background: linear-gradient(155deg, #1b2a1f, #0d1720 72%); border-color: #2c4a35; }
+.bingo .game-start { background: #22c55e; color: #04140a; }
+.bingo .sponsor-glyph, .bingo .game-subtitle, .bingo .card-topline { color: #4ade80; }
+.game-art.bingo { display: grid; align-content: center; justify-content: center; gap: 6px; }
+.bingo-head, .bingo-grid { display: grid; grid-template-columns: repeat(4, 30px); gap: 5px; }
+.bingo-head b { text-align: center; font: 700 15px "Pixelify Sans"; color: #f5a524; }
+.bingo-head b:nth-child(2) { color: #d94bf0; }.bingo-head b:nth-child(3) { color: #3b6cff; }.bingo-head b:nth-child(4) { color: #22c55e; }
+.bingo-grid i { height: 30px; border-radius: 5px; background: #0f131b; border: 2px solid #2e384b; }
+.bingo-grid i.on { background: #16a34a; border-color: #4ade80; box-shadow: 0 0 10px rgba(34,197,94,.35); }
+@media (max-width: 1100px) { .games-grid { grid-template-columns: 1fr; } }

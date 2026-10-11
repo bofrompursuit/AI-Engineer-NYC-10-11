@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f131b">
+<title>TINY Math Bingo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { space: "#0f131b", panel: "#1d2534", line: "#2e384b", ink: "#e8ebf1", muted: "#9aa3b5", amber: "#f5a524", magenta: "#d94bf0", cobalt: "#3b6cff", stamp: "#22c55e" },
+        fontFamily: { mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"] },
+      },
+    },
+  };
+</script>
+<style>
+  body { background: radial-gradient(ellipse at 50% -10%, #2a2140 0, #0f131b 55%) fixed, #0f131b; -webkit-tap-highlight-color: transparent; }
+  .cell { transition: transform .12s ease, background-color .2s, border-color .2s, box-shadow .2s; }
+  .cell:active { transform: scale(.94); }
+  .cell.active { border-color: #f5a524; box-shadow: 0 0 0 3px rgba(245,165,36,.35), 0 4px 0 #0b0f16; background: #2a2b3a; }
+  .cell.stamped { background: #16a34a; border-color: #4ade80; color: #04140a; box-shadow: 0 4px 0 #0e5c2b; }
+  .cell.stamped .check { animation: stamp .45s cubic-bezier(.2,1.6,.4,1) both; }
+  .cell.win { animation: glow 1s ease-in-out infinite alternate; }
+  @keyframes stamp { from { transform: scale(2.4) rotate(-18deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+  @keyframes glow { to { box-shadow: 0 0 0 3px #f5a524, 0 0 22px rgba(245,165,36,.7); } }
+  @keyframes shake { 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+  .shake { animation: shake .35s; }
+  .key { box-shadow: 0 4px 0 #0b0f16; }
+  .key:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b0f16; }
+  .btn-a { box-shadow: 0 4px 0 #1a3383, 0 0 18px rgba(59,108,255,.35); }
+  .btn-a:active { transform: translateY(3px); box-shadow: 0 1px 0 #1a3383; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  #banner.show { display: flex; }
+  #banner.show .card { animation: pop .5s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { *, *:before, *:after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body class="min-h-screen text-ink font-mono">
+  <canvas id="confetti" class="fixed inset-0 w-full h-full pointer-events-none z-50" aria-hidden="true"></canvas>
+
+  <main class="mx-auto w-full max-w-md px-4 pt-5 pb-10">
+    <header class="flex items-center justify-between mb-5">
+      <a href="/" class="text-xs tracking-widest text-muted hover:text-amber">← UNFOLD</a>
+      <span class="text-[10px] tracking-[.2em] text-muted">AGES 14–16</span>
+    </header>
+
+    <div class="mb-5">
+      <p class="text-[11px] tracking-[.25em] text-amber">MISSION 04 · ALGEBRA ARCADE</p>
+      <h1 class="mt-1 text-4xl font-black tracking-tight">TINY <span class="text-amber">Math</span> Bingo</h1>
+      <p class="mt-2 text-sm text-muted">Tap a square, solve it, stamp it. Four in a row wins.</p>
+    </div>
+
+    <section class="rounded-2xl bg-panel border-[3px] border-line p-3 shadow-[0_6px_0_#0b0f16]" aria-label="Bingo board">
+      <div class="grid grid-cols-[22px_repeat(4,1fr)] gap-2">
+        <span></span>
+        <span class="text-center text-xl font-black text-amber">T</span>
+        <span class="text-center text-xl font-black text-magenta">I</span>
+        <span class="text-center text-xl font-black text-cobalt">N</span>
+        <span class="text-center text-xl font-black text-stamp">Y</span>
+      </div>
+      <div id="board" class="mt-2 grid grid-cols-[22px_repeat(4,1fr)] gap-2"></div>
+    </section>
+
+    <div class="mt-3 flex items-center justify-between text-[11px] tracking-widest text-muted">
+      <span id="score">0 / 16 STAMPED</span>
+      <button id="reset" type="button" class="hover:text-amber">RESET BOARD</button>
+    </div>
+
+    <section id="panel" class="mt-4 rounded-2xl bg-panel border-[3px] border-line p-4 shadow-[0_6px_0_#0b0f16]" aria-live="polite">
+      <div id="empty" class="py-6 text-center text-sm text-muted">Tap any square to load its problem.</div>
+      <form id="answerForm" class="hidden" novalidate>
+        <div class="flex items-center justify-between">
+          <span id="qTag" class="text-[11px] tracking-[.2em] text-amber"></span>
+          <span id="qTopic" class="text-[10px] tracking-widest text-muted"></span>
+        </div>
+        <p id="question" class="mt-2 text-lg font-bold leading-snug"></p>
+        <label for="answer" class="sr-only">Your answer</label>
+        <input id="answer" type="number" inputmode="numeric" step="any" autocomplete="off" placeholder="?"
+          class="mt-4 w-full rounded-lg bg-space border-2 border-line px-4 py-3 text-2xl font-bold text-center tracking-widest outline-none focus:border-cobalt focus:ring-4 focus:ring-cobalt/30">
+        <p id="feedback" class="mt-2 h-4 text-center text-xs tracking-widest"></p>
+        <div id="keypad" class="mt-3 grid grid-cols-3 gap-2"></div>
+        <button type="submit" class="btn-a mt-3 w-full rounded-lg bg-cobalt py-4 text-lg font-black tracking-[.25em] text-white">STAMP</button>
+      </form>
+      <div id="done" class="hidden py-5 text-center">
+        <p class="text-[11px] tracking-[.2em] text-stamp">ALREADY STAMPED</p>
+        <p id="doneQ" class="mt-2 text-sm text-muted"></p>
+      </div>
+    </section>
+  </main>
+
+  <div id="banner" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 p-6" role="dialog" aria-modal="true" aria-labelledby="bingoTitle">
+    <div class="card w-full max-w-xs rounded-2xl border-[3px] border-amber bg-panel p-6 text-center shadow-[6px_6px_0_#f5a524]">
+      <p class="text-[11px] tracking-[.3em] text-amber">FOUR IN A ROW</p>
+      <h2 id="bingoTitle" class="mt-2 text-5xl font-black">BINGO!</h2>
+      <p id="winLine" class="mt-2 text-sm text-muted"></p>
+      <div class="mt-5 grid gap-2">
+        <button id="keepGoing" type="button" class="btn-a rounded-lg bg-cobalt py-3 font-black tracking-widest text-white">KEEP STAMPING</button>
+        <button id="playAgain" type="button" class="rounded-lg border-2 border-line py-3 text-sm tracking-widest text-muted hover:text-ink">NEW GAME</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const COLS = ["T", "I", "N", "Y"];
+  const TOPICS = ["Algebra & Linear", "Quadratics & Systems", "Exponents & Logs", "Geometry & Functions"];
+  // GRID[row][col]
+  const GRID = [
+    [
+      { q: "Solve for x: 3x − 7 = 14", a: 7 },
+      { q: "Find positive x: x² − 25 = 0", a: 5 },
+      { q: "Solve for x: 2^x = 64", a: 6 },
+      { q: "Hypotenuse of a right triangle with legs 3 and 4", a: 5 },
+    ],
+    [
+      { q: "Solve for x: x/4 + 5 = 12", a: 28 },
+      { q: "Solve for x: x² − 5x + 6 = 0 (highest root)", a: 3 },
+      { q: "Solve for x: 3^(x−1) = 27", a: 4 },
+      { q: "Area of a triangle with base 8 and height 5", a: 20 },
+    ],
+    [
+      { q: "Find x: 5x + 3 = 2x + 15", a: 4 },
+      { q: "System: x + y = 10, x − y = 4. What is x?", a: 7 },
+      { q: "Solve for x: log₁₀(x) = 2", a: 100 },
+      { q: "If f(x) = 2x² − 3, find f(3)", a: 15 },
+    ],
+    [
+      { q: "Solve for x: 2(x − 3) = 14", a: 10 },
+      { q: "Find positive x: 2x² = 72", a: 6 },
+      { q: "Evaluate: 5³ − 100", a: 25 },
+      { q: "Find x: √(x + 4) = 6", a: 32 },
+    ],
+  ];
+
+  const LINES = [];
+  for (let i = 0; i < 4; i++) {
+    LINES.push({ name: `Row ${i + 1}`, cells: [0, 1, 2, 3].map((c) => [i, c]) });
+    LINES.push({ name: `Column ${COLS[i]}`, cells: [0, 1, 2, 3].map((r) => [r, i]) });
+  }
+  LINES.push({ name: "Diagonal T1 → Y4", cells: [0, 1, 2, 3].map((i) => [i, i]) });
+  LINES.push({ name: "Diagonal T4 → Y1", cells: [0, 1, 2, 3].map((i) => [3 - i, i]) });
+
+  const STORE = "tiny-math-bingo";
+  const $ = (id) => document.getElementById(id);
+  const key = (r, c) => `${r}-${c}`;
+
+  let stamped = new Set();
+  let wins = new Set();
+  let active = null;
+  try { const saved = JSON.parse(localStorage.getItem(STORE) || "{}"); stamped = new Set(saved.stamped || []); wins = new Set(saved.wins || []); } catch {}
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify({ stamped: [...stamped], wins: [...wins] })); } catch {} };
+
+  function renderBoard() {
+    const board = $("board");
+    board.innerHTML = "";
+    const winCells = new Set();
+    LINES.filter((l) => wins.has(l.name)).forEach((l) => l.cells.forEach(([r, c]) => winCells.add(key(r, c))));
+    GRID.forEach((row, r) => {
+      const label = document.createElement("span");
+      label.className = "grid place-items-center text-sm font-bold text-muted";
+      label.textContent = r + 1;
+      board.appendChild(label);
+      row.forEach((_, c) => {
+        const k = key(r, c);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        const isStamped = stamped.has(k);
+        btn.className = "cell aspect-square rounded-lg border-2 border-line bg-space text-sm font-black shadow-[0_4px_0_#0b0f16] grid place-items-center"
+          + (isStamped ? " stamped" : "") + (active === k ? " active" : "") + (winCells.has(k) ? " win" : "");
+        btn.setAttribute("aria-label", `${COLS[c]}${r + 1}${isStamped ? ", stamped" : ""}`);
+        btn.setAttribute("aria-pressed", active === k);
+        btn.innerHTML = isStamped
+          ? `<svg class="check w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>`
+          : `<span class="text-muted">${COLS[c]}${r + 1}</span>`;
+        btn.addEventListener("click", () => select(r, c));
+        board.appendChild(btn);
+      });
+    });
+    $("score").textContent = `${stamped.size} / 16 STAMPED`;
+  }
+
+  function select(r, c) {
+    active = key(r, c);
+    const { q } = GRID[r][c];
+    $("empty").classList.add("hidden");
+    if (stamped.has(active)) {
+      $("answerForm").classList.add("hidden");
+      $("done").classList.remove("hidden");
+      $("doneQ").textContent = `${COLS[c]}${r + 1} · ${q} = ${GRID[r][c].a}`;
+    } else {
+      $("done").classList.add("hidden");
+      $("answerForm").classList.remove("hidden");
+      $("qTag").textContent = `SQUARE ${COLS[c]}${r + 1}`;
+      $("qTopic").textContent = TOPICS[c].toUpperCase();
+      $("question").textContent = q;
+      $("answer").value = "";
+      setFeedback("");
+      if (matchMedia("(pointer: fine)").matches) $("answer").focus();
+    }
+    renderBoard();
+    $("panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function setFeedback(text, ok) {
+    const f = $("feedback");
+    f.textContent = text;
+    f.className = "mt-2 h-4 text-center text-xs tracking-widest " + (ok ? "text-stamp" : "text-red-400");
+  }
+
+  function stamp(e) {
+    e.preventDefault();
+    if (!active || stamped.has(active)) return;
+    const [r, c] = active.split("-").map(Number);
+    const raw = $("answer").value.trim();
+    if (raw === "") { setFeedback("ENTER AN ANSWER"); return; }
+    if (Math.abs(Number(raw) - GRID[r][c].a) > 1e-9) {
+      setFeedback("NOT QUITE — TRY AGAIN");
+      const form = $("answerForm");
+      form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+      return;
+    }
+    stamped.add(active);
+    if (navigator.vibrate) navigator.vibrate(30);
+    const newWins = LINES.filter((l) => !wins.has(l.name) && l.cells.every(([rr, cc]) => stamped.has(key(rr, cc))));
+    newWins.forEach((l) => wins.add(l.name));
+    save();
+    select(r, c);
+    if (newWins.length) celebrate(newWins.map((l) => l.name).join(" + "));
+  }
+
+  function celebrate(lineName) {
+    $("winLine").textContent = lineName;
+    $("banner").classList.add("show");
+    $("keepGoing").focus();
+    confetti();
+  }
+  const closeBanner = () => $("banner").classList.remove("show");
+
+  function resetGame() {
+    stamped.clear(); wins.clear(); active = null; save();
+    $("answerForm").classList.add("hidden"); $("done").classList.add("hidden"); $("empty").classList.remove("hidden");
+    renderBoard();
+  }
+
+  function buildKeypad() {
+    const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "⌫"];
+    keys.forEach((k) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "key rounded-lg bg-space border-2 border-line py-3 text-xl font-bold " + (isNaN(k) ? "text-muted" : "");
+      b.textContent = k;
+      b.setAttribute("aria-label", k === "⌫" ? "Backspace" : k === "C" ? "Clear" : k);
+      b.addEventListener("click", () => {
+        const input = $("answer");
+        if (k === "C") input.value = "";
+        else if (k === "⌫") input.value = input.value.slice(0, -1);
+        else if (input.value.length < 6) input.value += k;
+        setFeedback("");
+      });
+      $("keypad").appendChild(b);
+    });
+  }
+
+  function confetti() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const canvas = $("confetti"), ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const colors = ["#f5a524", "#d94bf0", "#3b6cff", "#22c55e", "#e8ebf1"];
+    const bits = Array.from({ length: 160 }, () => ({
+      x: innerWidth / 2 + (Math.random() - .5) * 80, y: innerHeight * .4,
+      vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4,
+      s: Math.random() * 6 + 4, r: Math.random() * Math.PI, vr: (Math.random() - .5) * .3,
+      c: colors[(Math.random() * colors.length) | 0],
+    }));
+    const start = performance.now();
+    (function frame(t) {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      bits.forEach((p) => {
+        p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore();
+      });
+      if (t - start < 3200) requestAnimationFrame(frame); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    })(start);
+  }
+
+  $("answerForm").addEventListener("submit", stamp);
+  $("answer").addEventListener("input", () => setFeedback(""));
+  $("reset").addEventListener("click", () => { if (confirm("Clear every stamp and start over?")) resetGame(); });
+  $("keepGoing").addEventListener("click", closeBanner);
+  $("playAgain").addEventListener("click", () => { closeBanner(); resetGame(); });
+  $("banner").addEventListener("click", (e) => { if (e.target.id === "banner") closeBanner(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBanner(); });
+
+  buildKeypad();
+  renderBoard();
+</script>
+</body>
+</html>

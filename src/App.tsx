@@ -141,6 +141,18 @@ const games = [
     sponsorDetail: "Adaptive knowledge",
     progress: "3 challenges · +300 XP",
   },
+  {
+    id: "bingo",
+    number: "04",
+    kind: "bingo",
+    tag: "ALGEBRA ARCADE",
+    title: "TINY MATH BINGO",
+    subtitle: "AGES 14–16",
+    description: "Solve 16 algebra, exponent and geometry problems. Stamp four in a row to win.",
+    sponsor: "Phone-first mini game",
+    sponsorDetail: "Single-file build",
+    progress: "New · 4×4 grid",
+  },
 ];
 
 function GameArt({ kind }: { kind: string }) {
@@ -160,6 +172,15 @@ function GameArt({ kind }: { kind: string }) {
       <div className="game-art mars">
         <div className="planet" /><div className="dome d1" /><div className="dome d2" />
         <div className="rocket">▲<i /></div><span className="orbit" />
+      </div>
+    );
+  }
+  if (kind === "bingo") {
+    const stamped = [0, 5, 10, 15, 3, 6];
+    return (
+      <div className="game-art bingo">
+        <div className="bingo-head">{["T", "I", "N", "Y"].map((l) => <b key={l}>{l}</b>)}</div>
+        <div className="bingo-grid">{Array.from({ length: 16 }, (_, i) => <i key={i} className={stamped.includes(i) ? "on" : ""} />)}</div>
       </div>
     );
   }
@@ -234,7 +255,7 @@ function Dashboard({ openCase, openAnalytics, openJoin, openJourney }: { openCas
         </div>
       </section>
       <section className="games-grid">
-        {games.map((game) => <GameCard key={game.id} game={game} onStart={() => openJourney(game.id === "case" ? "biopharma" : game.id === "mars" ? "physics" : "calculus")} />)}
+        {games.map((game) => <GameCard key={game.id} game={game} onStart={game.id === "bingo" ? () => window.location.assign("/bingo/index.html") : () => openJourney(game.id === "case" ? "biopharma" : game.id === "mars" ? "physics" : "calculus")} />)}
       </section>
       <section className="lower-grid">
         <article className="panel feed-panel">
