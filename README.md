@@ -1,0 +1,59 @@
+# Unfold
+
+React/Vite hackathon prototype with a Game Boy join screen and Pip learning companion.
+
+## Pip flow
+
+1. Open `?view=join`, enter a valid email, and press A. This is a demo email check, not authentication or account creation.
+2. Press A again to meet Pip. Pip floats in and waves on a dark display, with a spoken greeting and matching captions. Skip opens the journey choices. Sound and voice preferences are saved in browser local storage.
+3. Choose A: Physics, B: Calculus, or C: Biopharma Cyber Detective. Each starter journey has three authored questions with answer validation, hints, and explanations.
+4. Pip remains in the corner. Correct answers trigger short confetti; finishing all three challenges triggers rockets. Reduced motion disables these animations. XP earned in a journey is a local demo display; the existing dashboard metrics remain sample data.
+
+The supplied GLBs are in `public/models`. A simple mascot illustration is shown if WebGL or model loading fails. The two short greeting clips are in `public/audio`, generated with these ElevenLabs voices:
+
+- Male: `s6pb93K3LygWF3wDe6zf`
+- Female: `AdWNY9CsbvFfDZr1rOOe`
+
+Greeting: “Hey, I'm Pip! Ready to learn something new? Pick an adventure. I'll be right here if you need a hand. Let's go!” No runtime ElevenLabs key is needed for these clips. Generated free-form answers currently use text, not synthesized speech.
+
+## Development and checks
+
+Use Node 22+ (verified with Node 24) and pnpm:
+
+```sh
+pnpm install
+pnpm dev
+pnpm exec tsc --noEmit
+pnpm test
+pnpm build
+```
+
+Vite defaults to port 8443. `/api/pip-help` is a Vercel function; Vite alone does not serve it. Built-in hints and explanations work without the API. Free-form requests report that live Q&A is unavailable if the function, key, or provider is unavailable.
+
+## Live Q&A on Vercel
+
+Set `GEMINI_API_KEY` on the server, never as a `VITE_` variable. Optional `GEMINI_MODEL` overrides the default `gemini-3.5-flash-lite`. Set `PIP_HELP_ENABLED=false` to disable provider requests. The route uses Google's [generateContent API](https://ai.google.dev/api/generate-content) and the [current model list](https://ai.google.dev/gemini-api/docs/models).
+
+The client sends the learner's question, journey/question identifiers, and whether the challenge was solved. It does not send the join email. The server loads the authored context, asks for concise hints, and calls Gemini with a 12-second timeout. It returns no invented fallback answers. Provider failures leave the authored hints available.
+
+The demo limits input to 600 characters and provider output to 400 tokens, with a per-instance eight-request/minute guard. This is not a distributed abuse limit; configure provider spending/quotas and a deployment-level limit before public use with a paid key. The curriculum and grading are client-visible demo data, not secure assessments. Sign-in, account persistence, live dashboard metrics, and live Gemini answers have not been verified.
+
+## Acceptance checks
+
+- QR opens the join route; invalid email stays on join; reset clears the entered player.
+- Enter opens the welcome, both voices play, mute and skip work, and all three choices lead to the matching journey.
+- Wrong answers do not advance or celebrate. Correct answers celebrate once and unlock the next challenge. Completing a journey celebrates and returns to the hub.
+- Help follows the current question; authored hints work without a provider; unavailable live Q&A is clearly reported.
+- Verify narrow/wide layouts, keyboard focus, reduced motion, and model/audio loading failures.
+
+API tests mock Gemini to check invalid requests, missing configuration, failure handling, trusted lesson context, and rate limiting. They do not prove live provider access or teaching quality.
+
+### Verified locally on October 11, 2026
+
+- Join, invalid email, both greeting voices, saved voice preference, mute, replay, skip, and all three journey routes.
+- All nine questions through completion; wrong-answer retry; confetti and rockets with normal motion.
+- Contextual hints, unavailable live Q&A, and Escape closing help with focus returned to Pip.
+- Desktop (1280 × 900) and phone (390 × 844) layouts. The phone lesson scrolls above Pip without covering the answer controls. Reduced motion hides celebrations and holds Pip still.
+- TypeScript, six API tests, and production build. The lazy Three.js chunk triggers Vite's size warning.
+
+Live Gemini, real authentication, and simulated asset-loading failures remain unverified.
