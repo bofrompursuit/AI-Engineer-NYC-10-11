@@ -359,59 +359,88 @@ function AnalyticsScreen({ goBack }: { goBack: () => void }) {
 
 const joinUrl = () => `${window.location.origin}${window.location.pathname}?view=join`;
 
+const skyline: [number, number, number][] = [
+  [0, 18, 46], [16, 14, 62], [28, 20, 38], [46, 12, 70], [56, 18, 50], [72, 10, 34], [80, 16, 58], [94, 14, 44],
+  [106, 20, 66], [124, 12, 40], [134, 18, 54], [150, 10, 74], [158, 16, 48], [172, 14, 60], [184, 16, 42],
+];
+
+function PixelCity() {
+  return (
+    <svg className="pixel-city" viewBox="0 0 200 112" preserveAspectRatio="xMidYMid slice" shapeRendering="crispEdges" aria-hidden="true">
+      <defs>
+        <linearGradient id="sunset" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f2a33c" /><stop offset=".55" stopColor="#e8673a" /><stop offset="1" stopColor="#5b2c4a" />
+        </linearGradient>
+      </defs>
+      <rect width="200" height="112" fill="url(#sunset)" />
+      <rect x="22" y="12" width="14" height="4" fill="#f7b765" /><rect x="128" y="20" width="18" height="4" fill="#f7b765" /><rect x="150" y="8" width="10" height="3" fill="#f7b765" />
+      <rect x="97" y="10" width="6" height="74" fill="#c9b9a8" /><rect x="98" y="6" width="4" height="4" fill="#c9b9a8" />
+      {skyline.map(([x, w, h]) => (
+        <g key={x}>
+          <rect x={x} y={84 - h} width={w} height={h} fill="#1b1d2e" />
+          {Array.from({ length: Math.floor(h / 8) }, (_, row) => (
+            <rect key={row} x={x + 3} y={84 - h + 4 + row * 8} width={w - 6} height="2" fill={row % 3 === 1 ? "#2b2d40" : "#f2b54a"} opacity=".85" />
+          ))}
+        </g>
+      ))}
+      {[18, 58, 98, 138, 178].map((x) => <g key={x}><rect x={x} y="70" width="2" height="16" fill="#2b2d40" /><rect x={x - 1} y="68" width="4" height="3" fill="#ffcf5a" /></g>)}
+      <rect y="84" width="200" height="28" fill="#2a2633" />
+      <rect y="84" width="200" height="2" fill="#4a4152" />
+      {[6, 34, 62, 90, 118, 146, 174].map((x) => <rect key={x} x={x} y="96" width="16" height="4" fill="#e0b56a" opacity=".8" />)}
+    </svg>
+  );
+}
+
 function JoinScreen({ onJoined }: { onJoined: () => void }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [player, setPlayer] = useState<string | null>(null);
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
+  const submit = (event?: FormEvent) => {
+    event?.preventDefault();
+    if (player) return onJoined();
     const value = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      setError("ENTER A VALID EMAIL TO SPAWN");
+      setError("ENTER A VALID EMAIL");
       return;
     }
     setError("");
     setPlayer(value);
   };
 
+  const reset = () => { setPlayer(null); setEmail(""); setError(""); };
+
   return (
     <main className="join page-enter">
-      <div className="hud-frame" aria-hidden="true"><i /><i /><i /><i /></div>
-      <div className="hud-top">
-        <span><i className="live-dot" /> LOBBY // AI ENGINEER NYC</span>
-        <span>SECTOR 10-11 · SIGNAL 98%</span>
-      </div>
-
-      <section className="join-grid">
-        <div className="join-scan">
-          <span className="join-kicker">STEP 01 / SCAN</span>
-          <h1>Scan to <em>drop in.</em></h1>
-          <p>Point your phone camera at the code to join the hackathon demo on your device.</p>
-          <div className="scan-target">
-            <span className="corner tl" /><span className="corner tr" /><span className="corner bl" /><span className="corner br" />
-            <span className="scan-line" />
-            <QRCodeSVG value={joinUrl()} size={232} bgColor="#f7fff9" fgColor="#071018" level="M" marginSize={2} />
+      <form className="handheld" onSubmit={submit} noValidate>
+        <div className="hh-bezel">
+          <div className="hh-progress">
+            <span className="hh-title"><Icon name="check" size={14} /> {player ? "PLAYER READY" : "PRESS START"}</span>
+            <strong>{player ? "1 / 1" : "0 / 1"}</strong>
+            <small>LV.1 &bull; {player ? "100%" : "SCAN OR SIGN IN"}</small>
+            <span className="hh-pips"><i className="on" /><i className={player ? "on" : ""} /><i /><i /></span>
           </div>
-          <code className="join-url">{joinUrl()}</code>
+          <div className="hh-screen">
+            <PixelCity />
+            {player ? (
+              <div className="hh-card hh-success" role="status">
+                <small>PLAYER SPAWNED</small>
+                <strong>{player}</strong>
+                <span>Press A to enter the hub</span>
+              </div>
+            ) : (
+              <div className="hh-card hh-qr">
+                <QRCodeSVG value={joinUrl()} size={128} bgColor="#ffffff" fgColor="#11141c" level="M" marginSize={1} />
+                <span>SCAN TO JOIN</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="join-divider"><span>OR</span></div>
-
-        <form className="join-panel" onSubmit={submit} noValidate>
-          <span className="join-kicker">STEP 02 / IDENTIFY</span>
-          <h2>Sign in with email</h2>
-          <p>We'll save your XP, streak and case files to this address.</p>
-          {player ? (
-            <div className="join-success" role="status">
-              <span className="crosshair" aria-hidden="true" />
-              <small>PLAYER SPAWNED</small>
-              <strong>{player}</strong>
-              <button className="btn btn-primary" type="button" onClick={onJoined}>ENTER MISSION HUB <Icon name="arrow" size={16} /></button>
-            </div>
-          ) : (
+        <div className="hh-entry">
+          {!player && (
             <>
-              <label htmlFor="join-email">EMAIL ADDRESS</label>
+              <label htmlFor="join-email">OR SIGN IN WITH EMAIL</label>
               <input
                 id="join-email"
                 type="email"
@@ -424,20 +453,25 @@ function JoinScreen({ onJoined }: { onJoined: () => void }) {
                 aria-describedby={error ? "join-error" : undefined}
               />
               {error && <span id="join-error" className="join-error">{error}</span>}
-              <button className="btn btn-primary join-submit" type="submit">PRESS START <Icon name="arrow" size={16} /></button>
-              <span className="join-fine"><Icon name="lock" size={14} /> No password. Email only.</span>
             </>
           )}
-          <div className="hud-bars" aria-hidden="true">
-            <span><small>HP</small><i><b style={{ width: "100%" }} /></i></span>
-            <span><small>XP</small><i><b style={{ width: player ? "35%" : "0%" }} /></i></span>
-          </div>
-        </form>
-      </section>
+        </div>
 
-      <div className="hud-bottom" aria-hidden="true">
-        <span>[ SCAN ] JOIN</span><span>[ ENTER ] START</span><span>V1.0 · LIVE</span>
-      </div>
+        <div className="hh-controls">
+          <div className="dpad" aria-hidden="true"><i className="up" /><i className="left" /><i className="mid" /><i className="right" /><i className="down" /></div>
+          <div className="hh-label">
+            <strong>UNFOLD</strong>
+            <small>AI ENGINEER NYC</small>
+            <i className="hh-stripe" />
+          </div>
+          <div className="ab">
+            <button type="button" className="ab-b" onClick={reset} aria-label="B: reset">B</button>
+            <button type="submit" className="ab-a" aria-label={player ? "A: enter mission hub" : "A: sign in"}>A</button>
+          </div>
+        </div>
+        <div className="hh-bottom" aria-hidden="true"><span>SELECT</span><span>START</span></div>
+        <div className="hh-grill" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
+      </form>
     </main>
   );
 }
