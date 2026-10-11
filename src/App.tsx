@@ -1,7 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import PipIntro from "./PipIntro";
 
-type View = "dashboard" | "case" | "analytics" | "join";
+type View = "intro" | "dashboard" | "case" | "analytics" | "join";
 
 const Icon = ({
   name,
@@ -85,6 +86,7 @@ function Header({ view, setView }: { view: View; setView: (view: View) => void }
         <button className={view === "join" ? "active" : ""} onClick={() => setView("join")} type="button">Join</button>
       </nav>
       <div className="header-actions">
+        <button className="pip-header-link" onClick={() => setView("intro")} type="button" aria-label="Meet Pip and choose a voice">✦ <span>MEET PIP</span></button>
         <Stat icon="coin" value="12,450" label="XP" />
         <Stat icon="brain" value="85" label="INTEL" />
         <div className="profile">
@@ -443,19 +445,23 @@ function JoinScreen({ onJoined }: { onJoined: () => void }) {
 }
 
 export default function App() {
-  const [view, setViewState] = useState<View>(() =>
-    new URLSearchParams(window.location.search).get("view") === "join" ? "join" : "dashboard",
-  );
+  const [view, setViewState] = useState<View>(() => {
+    const requested = new URLSearchParams(window.location.search).get("view");
+    if (requested === "join") return "join";
+    if (requested === "intro") return "intro";
+    return sessionStorage.getItem("pip-intro-seen") === "true" ? "dashboard" : "intro";
+  });
   const setView = (next: View) => {
     setViewState(next);
     const url = new URL(window.location.href);
-    if (next === "join") url.searchParams.set("view", "join");
+    if (next === "join" || next === "intro") url.searchParams.set("view", next);
     else url.searchParams.delete("view");
     window.history.replaceState(null, "", url);
   };
   return (
     <div className="app-shell">
-      <Header view={view} setView={setView} />
+      {view !== "intro" && <Header view={view} setView={setView} />}
+      {view === "intro" && <PipIntro onContinue={() => setView("dashboard")} />}
       {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} />}
       {view === "case" && <CaseScreen goBack={() => setView("dashboard")} openAnalytics={() => setView("analytics")} />}
       {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}

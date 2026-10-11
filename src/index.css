@@ -177,3 +177,63 @@ button { font: inherit; }
   .hud-top span:last-child, .hud-bottom { display: none; }
   .join-panel { padding: 26px 20px; }
 }
+
+/* Pip welcome screen */
+.pip-intro { --pip-yellow: #ffeb35; min-height: 100vh; padding: 28px clamp(20px, 4vw, 72px) 22px; display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(ellipse at 73% 44%, rgba(255,235,53,.09), transparent 39%), radial-gradient(ellipse at 12% 5%, rgba(57,231,189,.06), transparent 40%), #09121b; }
+.pip-intro-top, .pip-intro-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.pip-intro-brand { display: flex; align-items: center; gap: 11px; font-size: 16px; font-weight: 800; letter-spacing: -.5px; }
+.pip-intro-mark { width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid var(--pip-yellow); transform: rotate(45deg); color: var(--pip-yellow); font-size: 15px; }
+.pip-intro-mark::first-letter { transform: rotate(-45deg); }
+.pip-intro-step, .pip-intro-footer { font: 10px "DM Mono", monospace; letter-spacing: 1.6px; color: #71848e; }
+.pip-intro-grid { width: min(1320px, 100%); margin: auto; padding: 35px 0; display: grid; grid-template-columns: minmax(370px, .9fr) minmax(420px, 1.1fr); align-items: center; gap: clamp(25px, 6vw, 100px); }
+.pip-intro-copy { position: relative; z-index: 2; }
+.pip-intro-kicker { display: inline-flex; align-items: center; gap: 9px; color: var(--pip-yellow); font: 10px "DM Mono", monospace; letter-spacing: 2px; }
+.pip-intro-kicker span { width: 7px; height: 7px; border-radius: 50%; background: var(--pip-yellow); box-shadow: 0 0 14px rgba(255,235,53,.7); }
+.pip-intro h1 { margin: 22px 0 14px; font-size: clamp(64px, 8vw, 122px); letter-spacing: -.09em; line-height: .92; font-weight: 800; }
+.pip-period { color: var(--pip-yellow); }
+.pip-intro-lead { max-width: 510px; margin: 0; color: #c3cdd2; font-size: clamp(16px, 1.5vw, 20px); line-height: 1.6; }
+.pip-quote { margin: 23px 0 35px; display: flex; gap: 10px; align-items: start; color: #9aaab4; font-size: 13px; line-height: 1.5; }
+.pip-quote span { color: var(--pip-yellow); font: 40px Georgia, serif; line-height: .7; }
+.pip-voices { max-width: 510px; border: 0; margin: 0; padding: 0; }
+.pip-voices legend { padding: 0 0 11px; color: var(--pip-yellow); font: 10px "DM Mono", monospace; letter-spacing: 1.7px; }
+.pip-voice { display: flex; align-items: stretch; justify-content: space-between; min-height: 72px; margin-bottom: 9px; border: 1px solid #2b3d46; background: rgba(17,31,41,.82); transition: border-color .2s, background .2s; }
+.pip-voice.selected { border-color: var(--pip-yellow); background: rgba(255,235,53,.07); }
+.pip-voice label { display: flex; align-items: center; gap: 17px; flex: 1; padding: 12px 16px; cursor: pointer; }
+.pip-voice input { accent-color: var(--pip-yellow); width: 17px; height: 17px; margin: 0; }
+.pip-voice-number { color: #6e818b; font: 10px "DM Mono", monospace; }
+.pip-voice-copy { display: flex; flex-direction: column; gap: 3px; }
+.pip-voice-copy strong { font-size: 14px; }.pip-voice-copy small { color: #92a3ad; font-size: 11px; }
+.pip-voice-preview { width: 61px; border: 0; border-left: 1px solid #2b3d46; background: transparent; color: var(--pip-yellow); cursor: pointer; font-size: 16px; }
+.pip-voice-preview:hover { background: rgba(255,235,53,.1); }
+.pip-audio-error { max-width: 510px; color: #f3b6ab; font-size: 12px; margin: 9px 0 0; }
+.pip-enter { margin-top: 22px; width: min(510px, 100%); min-height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 21px; border: 0; background: var(--pip-yellow); color: #101510; font: 800 13px "DM Mono", monospace; letter-spacing: 1.2px; cursor: pointer; transition: background .2s, transform .2s; }
+.pip-enter:hover { background: #fff376; transform: translateY(-2px); }
+.pip-enter span { font-size: 24px; font-weight: 400; }
+.pip-intro-hint { margin: 11px 0 0; color: #70838c; font-size: 11px; }
+.pip-stage { min-height: min(70vh, 650px); position: relative; display: grid; place-items: center; isolation: isolate; }
+.pip-stage:before { content: ""; position: absolute; width: min(83%, 570px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255,235,53,.15), transparent 70%); filter: blur(20px); z-index: -2; }
+.pip-stage:after { content: ""; position: absolute; width: 53%; height: 22px; bottom: 10%; border-radius: 50%; background: #ffeb35; filter: blur(13px); opacity: .7; z-index: -1; }
+.pip-stage-ring { position: absolute; width: min(88%, 590px); aspect-ratio: 1; border: 1px solid rgba(255,235,53,.17); border-radius: 50%; z-index: -1; }
+.pip-stage-ring.ring-two { width: min(68%, 460px); border-style: dashed; opacity: .7; }
+.pip-model { width: 100%; height: min(70vh, 650px); min-height: 390px; cursor: pointer; }
+.pip-model canvas { display: block; width: 100%; height: 100%; }
+.pip-model-error { position: absolute; inset: 0; display: grid; place-items: center; color: #c3cdd2; }
+.pip-stage-tag, .pip-stage-tip { position: absolute; color: #abb9c1; font: 10px "DM Mono", monospace; letter-spacing: 1.5px; }
+.pip-stage-tag { top: 10%; right: 2%; color: var(--pip-yellow); }.pip-stage-tip { bottom: 5%; left: 2%; }
+.pip-intro-footer { padding-top: 16px; border-top: 1px solid #233540; }
+.pip-header-link { margin-right: 19px; padding: 8px 12px; border: 1px solid #655d29; background: rgba(255,235,53,.06); color: #ffeb35; font: 800 10px "DM Mono", monospace; letter-spacing: 1px; cursor: pointer; }
+.pip-header-link:hover { background: rgba(255,235,53,.15); }
+@media (max-width: 850px) {
+  .pip-intro { padding: 18px 18px 22px; }
+  .pip-intro-grid { grid-template-columns: 1fr; gap: 0; padding: 30px 0; }
+  .pip-stage { grid-row: 1; min-height: 300px; height: 340px; }
+  .pip-model { min-height: 300px; height: 340px; }
+  .pip-stage-tag { top: 0; }.pip-stage-tip { display: none; }
+  .pip-stage:after { bottom: 2%; }
+  .pip-intro h1 { margin-top: 14px; font-size: clamp(61px, 14vw, 90px); }
+  .pip-quote { margin-bottom: 24px; }
+}
+@media (max-width: 620px) { .pip-header-link { margin-right: 12px; }.pip-header-link span { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .pip-intro.page-enter, .pip-enter { animation: none; transition: none; }
+}
