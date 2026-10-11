@@ -536,7 +536,7 @@ export default function App() {
     <div className="app-shell">
       {view !== "welcome" && <Header view={view} setView={setView} />}
       <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
-        {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} />}
+        {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} onScan={() => setView("scan")} />}
         {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} />}
         {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}

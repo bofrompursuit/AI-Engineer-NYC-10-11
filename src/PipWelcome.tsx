@@ -1,20 +1,35 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
-import { journeys, type JourneyId } from "./journeys"
+import { getJourney, type JourneyId } from "./journeys"
 import { greeting, type PipAudio, type PipVoice } from "./usePipVoice"
 import { PipLoadingAvatar } from "./PipPoster"
 const PipAvatar = lazy(() => import("./PipAvatar"))
 
+type Choice = JourneyId | "scan"
+const choices: { id: Choice; letter: string; name: string; description: string; accent: string }[] = [
+  getJourney("physics"),
+  {
+    id: "scan",
+    letter: "B",
+    name: "Scan & Learn",
+    description: "Point your camera at anything real-world and I'll turn it into a quick challenge.",
+    accent: "purple",
+  },
+  { ...getJourney("biopharma"), letter: "C" },
+]
+
 export default function PipWelcome({
   audio,
   onChoose,
+  onScan,
 }: {
   audio: PipAudio
   onChoose: (id: JourneyId) => void
+  onScan: () => void
 }) {
   const [phase, setPhase] = useState<"loading" | "greeting" | "choices" | "leaving">(
     "loading",
   )
-  const [selected, setSelected] = useState<JourneyId | null>(null)
+  const [selected, setSelected] = useState<Choice | null>(null)
   const [avatarReady, setAvatarReady] = useState(false)
   const [entranceDone, setEntranceDone] = useState(false)
   const [queued, setQueued] = useState(false)
@@ -59,9 +74,9 @@ export default function PipWelcome({
   }, [])
   useEffect(() => {
     if (phase !== "leaving" || !selected) return
-    const timer = window.setTimeout(() => onChoose(selected), 800)
+    const timer = window.setTimeout(() => (selected === "scan" ? onScan() : onChoose(selected)), 800)
     return () => clearTimeout(timer)
-  }, [phase, selected, onChoose])
+  }, [phase, selected, onChoose, onScan])
   const skip = () => {
     speechRequest.current++
     clearTimeout(choiceTimer.current)
@@ -71,7 +86,7 @@ export default function PipWelcome({
     setPhase("choices")
     heading.current?.focus()
   }
-  const choose = (id: JourneyId) => {
+  const choose = (id: Choice) => {
     speechRequest.current++
     clearTimeout(choiceTimer.current)
     audio.stop()
@@ -148,7 +163,7 @@ export default function PipWelcome({
         </div>
         {(phase === "choices" || phase === "leaving") && (
           <div className="journey-choices" aria-label="Choose a journey">
-            {journeys.map((journey) => (
+            {choices.map((journey) => (
               <button
                 key={journey.id}
                 type="button"
