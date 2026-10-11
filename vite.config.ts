@@ -1,15 +1,21 @@
-import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
 import siteConfiguration from './.figma/make/site.json'
+import { apiScanMiddleware } from './src/server/viteApiPlugin'
 
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
   const emitSourcemaps = mode === 'development'
+
+  // Load .env (including non-VITE_-prefixed secrets like GEMINI_API_KEY) into
+  // process.env for our Node-side /api/scan dev middleware. These are never
+  // exposed to client code — only import.meta.env.VITE_* vars are bundled.
+  Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
 
   return {
     base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : '/',
@@ -24,6 +30,7 @@ react(),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
+      apiScanMiddleware(),
     ],
     resolve: {
       alias: {

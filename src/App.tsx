@@ -1,7 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import ScanScreen from "./ScanScreen";
 
-type View = "dashboard" | "case" | "analytics" | "join";
+type View = "dashboard" | "case" | "analytics" | "join" | "scan";
 
 const Icon = ({
   name,
@@ -83,6 +84,7 @@ function Header({ view, setView }: { view: View; setView: (view: View) => void }
         <button className={view === "case" ? "active" : ""} onClick={() => setView("case")} type="button">Case file</button>
         <button className={view === "analytics" ? "active" : ""} onClick={() => setView("analytics")} type="button">Analytics</button>
         <button className={view === "join" ? "active" : ""} onClick={() => setView("join")} type="button">Join</button>
+        <button className={view === "scan" ? "active" : ""} onClick={() => setView("scan")} type="button">Scan</button>
       </nav>
       <div className="header-actions">
         <Stat icon="coin" value="12,450" label="XP" />
@@ -460,6 +462,7 @@ export default function App() {
       {view === "case" && <CaseScreen goBack={() => setView("dashboard")} openAnalytics={() => setView("analytics")} />}
       {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
       {view === "join" && <JoinScreen onJoined={() => setView("dashboard")} />}
+      {view === "scan" && <ScanScreen goBack={() => setView("dashboard")} />}
     </div>
   );
 }

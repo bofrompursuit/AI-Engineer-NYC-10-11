@@ -10,13 +10,17 @@
     "format": "oxfmt"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "pg": "^8.23.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.0",
