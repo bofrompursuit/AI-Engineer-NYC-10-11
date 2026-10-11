@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import ConceptVisual from "./ConceptVisual"
+import ConceptVisual, { hasConceptVisual } from "./ConceptVisual"
 import { getJourney, type JourneyId, type Question } from "./journeys"
 import type { PipReactionKind } from "./pipBehavior"
 
@@ -28,7 +28,7 @@ export default function JourneyPlayer({
   const title = useRef<HTMLHeadingElement>(null)
   const question = journey.questions[step]
   const solved = result === "correct"
-  const hasVisual = question.id === "force" || question.id === "speed" || question.id === "energy"
+  const hasVisual = hasConceptVisual(question.id)
   useEffect(() => {
     title.current?.focus()
   }, [step, complete])

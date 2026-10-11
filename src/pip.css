@@ -85,8 +85,36 @@
 .cv-bar i.fill-dim { height: 38%; }
 .cv-bar i.fill-bright { height: 92%; }
 @media (prefers-reduced-motion: reduce) {
-  .cv-rover, .cv-bar i { transition-duration: .05s !important; }
+  .cv-rover, .cv-bar i, .cv-jar-fill { transition-duration: .05s !important; }
 }
+.cv-curve { height: 120px; }
+.cv-curve svg { width: 100%; height: 100%; }
+.cv-curve path { fill: none; stroke: var(--line); stroke-width: 3; }
+.cv-curve circle { fill: var(--muted); transition: r .2s, fill .2s; }
+.cv-curve circle.hot { fill: var(--journey-accent); }
+.cv-curve .tangent { stroke: var(--journey-accent); stroke-width: 2; stroke-dasharray: 4 3; }
+.cv-jar { position: relative; width: 70px; height: 90px; margin: 0 auto; background: var(--space-2); border: 2px solid var(--line); border-radius: 0 0 10px 10px; display: flex; align-items: flex-end; overflow: hidden; }
+.cv-jar-fill { width: 100%; height: 0; background: var(--journey-accent); transition: height .5s ease-out; }
+.cv-jar-total { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: var(--pip-small); color: var(--ink); }
+.cv-signals { display: flex; gap: var(--pip-lg); justify-content: center; }
+.cv-signal { display: grid; justify-items: center; gap: 4px; width: 110px; }
+.cv-signal svg { width: 100%; height: 36px; }
+.cv-signal path { fill: none; stroke-width: 3; }
+.cv-signal .flat { stroke: var(--muted); }
+.cv-signal .wavy { stroke: var(--journey-accent); }
+.cv-signal-icon { font-size: 22px; }
+.cv-base { display: grid; place-items: center; width: 34px; height: 34px; font-weight: 700; color: var(--journey-accent); background: var(--space-2); border: 2px solid var(--journey-accent); border-radius: 8px; }
+.cv-base-arrow { color: var(--muted); }
+.cv-btn.cv-base-try.wrong { border-color: var(--danger); color: var(--danger); }
+.cv-boxes { display: flex; gap: var(--pip-lg); justify-content: center; }
+.cv-box { display: grid; justify-items: center; gap: 6px; }
+.cv-drawers { display: flex; gap: 4px; }
+.cv-drawers i { display: grid; place-items: center; width: 26px; height: 26px; font-style: normal; font-size: 11px; background: var(--space-2); border: 1px solid var(--line); border-radius: 4px; transition: border-color .3s, background .3s; }
+.cv-drawers i.highlight { border-color: var(--journey-accent); background: color-mix(in srgb, var(--journey-accent) 20%, var(--space-2)); }
+.cv-pixels { display: grid; grid-template-columns: repeat(4, 16px); gap: 2px; justify-content: center; }
+.cv-pixels i { width: 16px; height: 16px; background: var(--line); }
+.cv-pixels i.on { background: var(--journey-accent); }
+.cv-hash { display: block; text-align: center; font-size: var(--pip-small); color: var(--mint-soft); letter-spacing: 1px; }
 .journey-answers { display: grid; gap: var(--pip-sm); margin: var(--pip-lg) 0; }
 .journey-answers button { display: flex; align-items: center; gap: var(--pip-md); padding: var(--pip-md); color: var(--ink); font-size: var(--pip-body); text-align: left; background: var(--space-2); border: 2px solid var(--line); border-radius: var(--pip-radius); line-height: 1.5; }
 .journey-answers button > span { display: grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; background: var(--panel); font-size: var(--pip-small); border-radius: 4px; }
