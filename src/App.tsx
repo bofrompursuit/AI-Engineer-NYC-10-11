@@ -6,6 +6,7 @@ import usePipVoice from "./usePipVoice";
 import PipWelcome from "./PipWelcome";
 import type { HelpContext } from "./JourneyPlayer";
 import { playArcadeSound } from "./arcadeAudio";
+import { pipReactionDuration, type PipReaction, type PipReactionKind } from "./pipBehavior";
 const PipCompanion = lazy(() => import("./PipCompanion"));
 const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
 const Celebration = lazy(() => import("./Celebration"));
@@ -478,10 +479,12 @@ export default function App() {
   const [pipUnlocked, setPipUnlocked] = useState(view === "journey");
   const [context, setContext] = useState<HelpContext | null>(null);
   const [celebration, setCelebration] = useState<{ kind: "answer" | "complete"; serial: number } | null>(null);
+  const [reaction, setReaction] = useState<PipReaction | null>(null);
   const audio = usePipVoice();
   const setView = useCallback((next: View) => {
     audio.stop();
     setCelebration(null);
+    setReaction(null);
     setViewState(next);
     const url = new URL(window.location.href);
     url.searchParams.delete("mission");
@@ -497,7 +500,16 @@ export default function App() {
     url.searchParams.set("view", "journey"); url.searchParams.set("mission", id);
     window.history.replaceState(null, "", url);
   }, [setView]);
-  const celebrate = useCallback((kind: "answer" | "complete") => setCelebration((previous) => ({ kind, serial: (previous?.serial || 0) + 1 })), []);
+  const reactToAnswer = useCallback((kind: PipReactionKind, questionId: string) => {
+    setReaction((previous) => ({ kind, questionId, serial: (previous?.serial || 0) + 1 }));
+    if (kind === "retry") setCelebration(null);
+    else setCelebration((previous) => ({ kind: kind === "complete" ? "complete" : "answer", serial: (previous?.serial || 0) + 1 }));
+  }, []);
+  useEffect(() => {
+    if (!reaction) return;
+    const timer = window.setTimeout(() => setReaction(null), pipReactionDuration[reaction.kind]);
+    return () => clearTimeout(timer);
+  }, [reaction]);
   const clearCelebration = useCallback(() => setCelebration(null), []);
   useEffect(() => {
     if (view === "join") {
@@ -514,12 +526,12 @@ export default function App() {
       <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
         {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} />}
         {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} />}
-        {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onCelebrate={celebrate} />}
+        {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
         {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
         {view === "scan" && <ScanScreen goBack={() => setView("dashboard")} />}
       </Suspense>
-      {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && view !== "scan" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} celebrating={Boolean(celebration)} /></Suspense>}
+      {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && view !== "scan" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} reaction={reaction} /></Suspense>}
       {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}
     </div>
   );

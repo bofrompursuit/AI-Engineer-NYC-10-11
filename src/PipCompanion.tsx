@@ -9,6 +9,7 @@ import {
 import type { HelpContext } from "./JourneyPlayer"
 import type { PipAudio, PipVoice } from "./usePipVoice"
 import { PipLoadingAvatar } from "./PipPoster"
+import type { PipMood, PipReaction } from "./pipBehavior"
 const PipAvatar = lazy(() => import("./PipAvatar"))
 type Message = {
   who: "you" | "pip"
@@ -18,11 +19,11 @@ type Message = {
 export default function PipCompanion({
   context,
   audio,
-  celebrating,
+  reaction,
 }: {
   context: HelpContext | null
   audio: PipAudio
-  celebrating: boolean
+  reaction: PipReaction | null
 }) {
   const [open, setOpen] = useState(false)
   const [question, setQuestion] = useState("")
@@ -34,6 +35,9 @@ export default function PipCompanion({
   const log = useRef<HTMLDivElement>(null)
   const request = useRef<AbortController | null>(null)
   const questionId = context?.question.id
+  const answerReaction = reaction && (reaction.kind === "complete" || reaction.questionId === questionId) ? reaction.kind : null
+  const mood: PipMood = answerReaction || (audio.playing ? "speaking" : busy ? "thinking" : "idle")
+  const label = answerReaction === "retry" ? "You've got this!" : answerReaction ? "You did it!" : busy ? "Thinking…" : audio.playing ? "I'm Pip!" : "Ask Pip"
   useEffect(() => {
     request.current?.abort()
     request.current = null
@@ -246,11 +250,11 @@ export default function PipCompanion({
       >
         <span className="pip-mini">
           <Suspense fallback={<PipLoadingAvatar />}>
-            <PipAvatar wave={open || hover || celebrating} />
+            <PipAvatar wave={(open || hover) && mood === "idle"} mood={mood} reactionSerial={answerReaction ? reaction?.serial : 0} getLevel={audio.getLevel} />
           </Suspense>
         </span>
         <span className="pip-launcher-label">
-          {celebrating ? "You did it!" : "Ask Pip"}
+          {label}
         </span>
       </button>
     </aside>

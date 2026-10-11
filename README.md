@@ -62,3 +62,21 @@ API tests mock Gemini to check invalid requests, missing configuration, failure 
 The local loading update was also checked with slow network simulation, blocked model downloads, blocked audio downloads followed by replay recovery, both voices, mute/replay, and reduced motion. The corner avatar reuses the preloaded models without new model requests.
 
 Live Gemini and real authentication remain unverified.
+
+### Local Pip motion update
+
+- Pip uses the Blender facial controls for blinks and happy eyes, and floats and sways while idle. The yellow base stays stationary.
+- Greeting playback blends closed, open, and round mouth shapes and small arm gestures from the actual audio amplitude. Both voice clips use the same analyser; mute, stop, and playback completion disconnect it. This is an approximation of talking, not phoneme lip sync.
+- Correct answers and completion trigger a bounce, raised arms, happy eyes, and a wider smile. Incorrect answers trigger a gentle nod, a small smile, and the label "You've got this!". Repeated answer checks restart the reaction, and old reactions do not follow Pip to a different question.
+- Pending help requests trigger a thinking tilt. Greeting and help waves play once, with a short blend into and out of the existing clip.
+- Reduced motion holds Pip in his neutral pose while keeping audio and text feedback available. Hidden tabs pause visual updates.
+
+The active models are `public/models/pip-neutral-expressions.glb` and `public/models/pip-hover-wave-expressions.glb`. The original model files are preserved. The new exports retain the exact neutral geometry, materials, transforms, and existing wave animation, so the loading still remains a match. Their matching object hierarchies allow the wave clip to animate the neutral model while facial controls change independently. Named controls are resolved from each mesh's dictionary; eye and mouth weights are blended within their groups with totals at most 1. Motion values live in `src/pipMotion.ts`; reaction durations live in `src/pipBehavior.ts`.
+
+The two greeting MP3s and loading PNG are excluded from Git LFS in `.gitattributes`. These small runtime assets are stored as their original bytes so a regular checkout and static build include usable files without an LFS download step.
+
+Checked locally before the Blender handoff: both greeting voices, mute and replay, a full Physics journey with wrong-answer retry and completion, thinking with a mocked help response, desktop and 390-pixel phone layouts, and reduced motion. A temporary browser probe confirmed a changing audio signal during playback and zero after stop. TypeScript and the production build passed.
+
+After the Blender handoff, checks with the actual exports passed for named controls, speech deformation, happy blinks, facial group totals, unchanged neutral geometry, independent cloned weights, simultaneous wave and speech, stationary base, and reduced-motion recovery. The browser loaded both new GLBs at their expected sizes; both voices, mute, retry, correct-answer smiles, and journey completion worked. Happy eyes and the smile were checked in the 390 × 844 phone layout with no horizontal overflow or overlap with answer controls. Reduced motion hid celebrations and kept Pip neutral. TypeScript and the production build passed; the existing Three.js chunk warning remains.
+
+Live Gemini remains unverified.
