@@ -206,7 +206,24 @@ button { font: inherit; }
 .scan-placeholder { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; border: 1px dashed var(--line); background: rgba(13,26,36,.5); padding: 32px 26px; min-height: 320px; justify-content: center; }
 .scan-placeholder.pip-loading { align-items: center; text-align: center; }
 .scan-placeholder p { margin: 0; color: #a4b1b9; font-size: 12px; line-height: 1.7; max-width: 420px; }
-.pip-avatar-sm { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--mint); background: rgba(57,231,189,.1); border: 1px solid var(--mint); flex-shrink: 0; }
+.scan-upload .scan-pip-guide { display: grid; grid-template-columns: calc(var(--pip-dock) + var(--pip-xl) * 3) minmax(0, 1fr); align-items: center; gap: var(--pip-lg); padding: var(--pip-lg); }
+.scan-upload .scan-pip-portrait { width: 100%; aspect-ratio: 1; }
+.scan-upload .scan-pip-copy { display: grid; gap: var(--pip-md); min-width: 0; }
+.scan-upload .scan-pip-heading { display: grid; gap: var(--pip-sm); }
+.scan-upload .scan-pip-heading small { color: var(--mint); font-size: var(--pip-small); }
+.scan-upload .scan-pip-heading strong { color: var(--ink); font-size: var(--pip-title); font-family: "Pixelify Sans", monospace; }
+.scan-upload .scan-pip-guide p { color: var(--muted); font-size: var(--pip-body); line-height: var(--pip-leading); margin: 0; max-width: 640px; }
+.scan-upload .scan-pip-controls { display: flex; flex-wrap: wrap; gap: var(--pip-sm); }
+.scan-upload .scan-pip-controls button { min-height: 44px; font-size: var(--pip-small); }
+.scan-upload .scan-pip-controls button:focus-visible { outline: 2px solid var(--mint); outline-offset: 3px; }
+.scan-upload .scan-pip-controls button:disabled { opacity: .5; cursor: default; }
+.scan-upload .scan-pip-guide .scan-pip-audio-note { font-size: 10px; }
+.scan-upload .scan-pip-guide .pip-error { color: var(--danger); }
+@media (max-width: 620px) {
+  .scan-upload .scan-pip-guide { grid-template-columns: 1fr; gap: var(--pip-sm); }
+  .scan-upload .scan-pip-portrait { width: calc(var(--pip-dock) + var(--pip-xl)); justify-self: center; }
+  .scan-upload .scan-placeholder { min-height: 0; }
+}
 .pip-scan-btn { min-height: 44px; padding: 0 20px; }
 .pip-loading { align-items: center; text-align: center; padding: 28px 16px; }
 .pip-spinner { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--mint); animation: pip-spin .8s linear infinite; }

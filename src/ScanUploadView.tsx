@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import AnnotatedImage from "./AnnotatedImage";
 import { prepareScanImage, requestScan, type ScanResult } from "./scanUpload";
+import { PipLoadingAvatar } from "./PipPoster";
+import type { PipMood } from "./pipBehavior";
+import { scanGreeting, type PipAudio } from "./usePipVoice";
+
+const PipAvatar = lazy(() => import("./PipAvatar"));
+type ScanMascotState = "welcome" | "happy" | "encouraging";
 
 type Status = "idle" | "loading" | "result" | "error";
 
@@ -23,18 +29,53 @@ function celebrate() {
   });
 }
 
-export default function ScanUploadView({ onViewGallery }: { onViewGallery: () => void }) {
+export default function ScanUploadView({ onViewGallery, audio: speech }: { onViewGallery: () => void; audio: PipAudio }) {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ScanResult | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingText, setLoadingText] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const request = useRef<AbortController | null>(null);
   useEffect(() => () => request.current?.abort(), []);
+  const [mascotState, setMascotState] = useState<ScanMascotState>("welcome");
+  const [reactionSerial, setReactionSerial] = useState(0);
+  const [avatarReady, setAvatarReady] = useState(false);
+  const avatarSettled = useCallback(() => setAvatarReady(true), []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const greetingHandled = useRef(false);
+
+  useEffect(() => {
+    if (!avatarReady) return;
+    const timer = window.setTimeout(() => {
+      if (greetingHandled.current) return;
+      greetingHandled.current = true;
+      void speech.play(speech.voice, false, "scan");
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [avatarReady, speech.play, speech.voice]);
+
+  useEffect(() => speech.stop, [speech.stop]);
+
+  const mood: PipMood = mascotState === "happy" ? "correct" : mascotState === "encouraging" ? "retry"
+    : speech.playing ? "speaking" : status === "loading" ? "thinking" : "idle";
+
+  const dialogue = status === "loading" ? loadingText : status === "error"
+    ? "Let's try another photo. I'm here to help."
+    : selected !== null && result
+      ? selected === result.correctIndex ? result.pipLine : "Not quite — let's figure this out together. Here's the answer."
+      : result ? "What do you think? Pick an answer, and we'll explore it together." : scanGreeting;
+
+  const hearPip = () => {
+    greetingHandled.current = true;
+    speech.prepare("scan");
+    void speech.hear(speech.voice, "scan");
+  };
 
   const handleFile = async (file: File) => {
+    greetingHandled.current = true;
+    speech.stop();
+    setMascotState("welcome");
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -72,6 +113,9 @@ export default function ScanUploadView({ onViewGallery }: { onViewGallery: () =>
     if (selected !== null || !result) return;
     setSelected(index);
     const isCorrect = index === result.correctIndex;
+    setMascotState(isCorrect ? "happy" : "encouraging");
+    setReactionSerial((serial) => serial + 1);
+    speech.stop();
     if (isCorrect) celebrate();
     if (result.id != null) {
       fetch("/api/answer", {
@@ -83,33 +127,41 @@ export default function ScanUploadView({ onViewGallery }: { onViewGallery: () =>
   };
 
   return (
-    <section className="case-layout">
+    <section className="case-layout scan-upload">
       <div className="scan-stage">
-        {status === "idle" && (
-          <div className="scan-placeholder">
-            <span className="pip-avatar-sm" aria-hidden="true">✦</span>
-            <p>Hi, I'm PIP! Point your camera at anything you're curious about — a sign, a gadget, a plant, a formula on a whiteboard — and I'll turn it into a quick challenge.</p>
-            <button className="btn btn-primary pip-scan-btn" type="button" onClick={() => fileInputRef.current?.click()}>
-              Scan something
-            </button>
+        <div className="scan-placeholder scan-pip-guide">
+          <div className="scan-pip-portrait">
+            <Suspense fallback={<PipLoadingAvatar />}>
+              <PipAvatar wave={status === "idle" && speech.playing} mood={mood} reactionSerial={reactionSerial} getLevel={speech.getLevel} onReady={avatarSettled} />
+            </Suspense>
           </div>
-        )}
-
-        {status === "loading" && (
-          <div className="scan-placeholder pip-loading">
-            <span className="pip-spinner" aria-hidden="true" />
-            <p role="status">{loadingText}</p>
+          <div className="scan-pip-copy">
+            <div className="scan-pip-heading">
+              <small>PIP / YOUR LEARNING GUIDE</small>
+              <strong>{mascotState === "happy" ? "You got it!" : mascotState === "encouraging" ? "Let's work it out." : "Hi, I'm PIP!"}</strong>
+            </div>
+            <p aria-live="polite">{dialogue}</p>
+            {status === "idle" && (
+              <div>
+                <button className="btn btn-primary pip-scan-btn" type="button" onClick={() => fileInputRef.current?.click()}>Scan something</button>
+              </div>
+            )}
+            {status === "loading" && <span className="pip-spinner" aria-label="Analyzing your photo" role="status" />}
+            {status === "error" && (
+              <>
+                <p className="pip-error" role="alert">{errorMsg}</p>
+                <div>
+                  <button className="btn btn-outline pip-scan-btn" type="button" onClick={() => fileInputRef.current?.click()}>Try another photo</button>
+                </div>
+              </>
+            )}
+            <div className="scan-pip-controls">
+              {status === "idle" && <button type="button" className="btn btn-outline" onClick={() => speech.playing || speech.pending ? speech.stop() : hearPip()}>{speech.playing ? "Stop speaking" : speech.pending ? "Cancel speech" : "Hear PIP"}</button>}
+              <button type="button" className="btn btn-outline" aria-pressed={!speech.muted} onClick={() => { if (speech.muted && status === "idle") hearPip(); else speech.toggleMute(); }}>Sound {speech.muted ? "off" : "on"}</button>
+            </div>
+            {speech.audioError && status === "idle" && <p className="scan-pip-audio-note" role="status">{speech.audioError}</p>}
           </div>
-        )}
-
-        {status === "error" && (
-          <div className="scan-placeholder">
-            <p className="pip-error" role="alert">{errorMsg}</p>
-            <button className="btn btn-outline pip-scan-btn" type="button" onClick={() => fileInputRef.current?.click()}>
-              Try another photo
-            </button>
-          </div>
-        )}
+        </div>
 
         {status === "result" && result && imageDataUrl && (
           <>
@@ -123,7 +175,7 @@ export default function ScanUploadView({ onViewGallery }: { onViewGallery: () =>
 
       <aside className="mission-panel">
         <div className="mission-status">
-          <small>PIP / YOUR LEARNING GUIDE</small>
+          <small>YOUR CHALLENGE</small>
           <strong>{result ? result.question : "Scan to generate a question"}</strong>
         </div>
 

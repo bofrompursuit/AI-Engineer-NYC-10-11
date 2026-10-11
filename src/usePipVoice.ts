@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 export type PipVoice = "male" | "female"
+type PipGreeting = "welcome" | "scan"
+export const scanGreeting = "Hi, I'm PIP! Point your camera at anything you're curious about — a sign, a gadget, a plant, a formula on a whiteboard — and I'll turn it into a quick challenge."
 export const greeting = "Hey, I'm Pip! Ready to learn something new? Pick an adventure. I'll be right here if you need a hand. Let's go!"
 function saved(key: string) { try { return localStorage.getItem(key) } catch { return null } }
 function save(key: string, value: string) { try { localStorage.setItem(key, value) } catch { /* Preferences are optional. */ } }
 
-// Two decoded clips and one audio context are shared for the page's lifetime.
+// Recorded greetings and one audio context are shared for the page's lifetime.
 let speechContext: AudioContext | undefined
-const clips = new Map<PipVoice, Promise<AudioBuffer>>()
+const clips = new Map<string, Promise<AudioBuffer>>()
 function context() {
   if (!speechContext || speechContext.state === "closed") {
     speechContext = new AudioContext()
@@ -15,15 +17,16 @@ function context() {
   }
   return speechContext
 }
-function loadClip(voice: PipVoice) {
-  let loaded = clips.get(voice)
+function loadClip(voice: PipVoice, greetingKind: PipGreeting) {
+  const key = `${greetingKind}-${voice}`
+  let loaded = clips.get(key)
   if (!loaded) {
     const engine = context()
-    loaded = fetch(`/audio/pip-welcome-${voice}.mp3`, { signal: AbortSignal.timeout(12000) })
+    loaded = fetch(`/audio/pip-${greetingKind}-${voice}.mp3`, { signal: AbortSignal.timeout(12000) })
       .then((response) => { if (!response.ok) throw new Error("Audio unavailable"); return response.arrayBuffer() })
       .then((bytes) => engine.decodeAudioData(bytes))
-      .catch((error) => { clips.delete(voice); throw error })
-    clips.set(voice, loaded)
+      .catch((error) => { clips.delete(key); throw error })
+    clips.set(key, loaded)
   }
   return loaded
 }
@@ -32,6 +35,7 @@ export default function usePipVoice() {
   const [voice, setVoice] = useState<PipVoice>(() => saved("pip-voice") === "female" ? "female" : "male")
   const [muted, setMuted] = useState(() => saved("pip-muted") === "true")
   const [playing, setPlaying] = useState(false)
+  const [pending, setPending] = useState(false)
   const [audioError, setAudioError] = useState("")
   const source = useRef<AudioBufferSourceNode | null>(null)
   const meter = useRef<{ node: AnalyserNode; samples: Float32Array<ArrayBuffer> } | null>(null)
@@ -59,26 +63,31 @@ export default function usePipVoice() {
     }
     disconnectMeter()
     setPlaying(false)
+    setPending(false)
   }, [disconnectMeter])
-  const preload = useCallback(() => {
-    try { void Promise.allSettled([loadClip("male"), loadClip("female")]) }
+  const preload = useCallback((greetingKind: PipGreeting = "welcome") => {
+    try { void Promise.allSettled([loadClip("male", greetingKind), loadClip("female", greetingKind)]) }
     catch { /* Hear Pip can retry when audio is unavailable. */ }
   }, [])
-  const prepare = useCallback(() => {
+  const prepare = useCallback((greetingKind: PipGreeting = "welcome") => {
     // Resume directly from Enter/Hear Pip, then play later when the visual is ready.
-    try { void context().resume().catch(() => {}); preload() }
+    try { void context().resume().catch(() => {}); preload(greetingKind) }
     catch { /* Playback will show a useful error. */ }
   }, [preload])
-  const play = useCallback(async (selected = voice, force = false): Promise<number> => {
+  const play = useCallback(async (selected = voice, force = false, greetingKind: PipGreeting = "welcome"): Promise<number> => {
     stop()
     setAudioError("")
     if (muted && !force) return 0
     const current = request.current
+    setPending(true)
     let timeout = 0
     try {
       const engine = context()
+      if (!force && engine.state === "suspended" && navigator.userActivation && !navigator.userActivation.hasBeenActive) {
+        throw new Error("Audio needs a user gesture")
+      }
       // This also supports direct Hear Pip/voice-selection gestures.
-      const ready = Promise.all([loadClip(selected), engine.resume()])
+      const ready = Promise.all([loadClip(selected, greetingKind), engine.resume()])
       const [buffer] = await Promise.race([
         ready,
         new Promise<never>((_, reject) => {
@@ -117,6 +126,7 @@ export default function usePipVoice() {
       return 0
     } finally {
       clearTimeout(timeout)
+      if (current === request.current) setPending(false)
     }
   }, [voice, muted, stop, disconnectMeter])
   const chooseVoice = (next: PipVoice) => { stop(); setVoice(next); save("pip-voice", next) }
@@ -126,10 +136,10 @@ export default function usePipVoice() {
     save("pip-muted", String(next))
     if (next) stop()
   }
-  const hear = (selected = voice) => {
+  const hear = (selected = voice, greetingKind: PipGreeting = "welcome") => {
     setMuted(false)
     save("pip-muted", "false")
-    return play(selected, true)
+    return play(selected, true, greetingKind)
   }
   useEffect(() => () => {
     request.current++
@@ -141,6 +151,6 @@ export default function usePipVoice() {
     }
     disconnectMeter()
   }, [disconnectMeter])
-  return { voice, muted, playing, audioError, getLevel, preload, prepare, play, hear, stop, chooseVoice, toggleMute }
+  return { voice, muted, playing, pending, audioError, getLevel, preload, prepare, play, hear, stop, chooseVoice, toggleMute }
 }
 export type PipAudio = ReturnType<typeof usePipVoice>
