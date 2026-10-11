@@ -23,6 +23,20 @@ Greeting: “Hey, I'm Pip! Ready to learn something new? Pick an adventure. I'll
 
 Use Node 22+ (verified with Node 24) and pnpm:
 
+1. Copy the environment template from the repository root:
+
+   ```sh
+   cp .env.example .env.local
+   ```
+
+2. Open `.env.local` and fill in `GEMINI_API_KEY` to enable image quizzes. Add a
+   `NIMBLE_API_KEY` for related articles and the `TIGER_*` connection values for scan
+   storage and the gallery. The template explains the optional settings. Pip's
+   bundled greeting clips work without an ElevenLabs key.
+3. Install dependencies and start the development server with the commands below.
+   Restart it after changing environment values. `.env.local` is ignored by Git;
+   `.env.example` contains empty credential fields and is safe to share.
+
 ```sh
 pnpm install
 pnpm dev
