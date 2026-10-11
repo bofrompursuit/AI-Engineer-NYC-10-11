@@ -7,7 +7,7 @@ const source = await readFile(new URL("../src/scanUpload.ts", import.meta.url), 
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext },
 });
-const { requestScan, prepareScanImage } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
+const { requestScan, prepareScanImage, readJpegOrientation } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
 
 const valid = {
   id: "3",
@@ -67,4 +67,21 @@ test("rejects incomplete or invalid model results before the UI renders them", a
 test("rejects oversized or non-image input before image decoding", async () => {
   await assert.rejects(prepareScanImage({ size: 25_000_001, type: "image/png" }), /smaller than 25 MB/);
   await assert.rejects(prepareScanImage(new File(["text"], "notes.txt", { type: "text/plain" })), /Choose an image file/);
+});
+
+test("reads the camera orientation and stored size from a JPEG header", () => {
+  const exif = (orientation, little) => {
+    const u16 = (n) => little ? [n & 255, n >> 8] : [n >> 8, n & 255];
+    const u32 = (n) => little ? [...u16(n & 65535), ...u16(n >>> 16)] : [...u16(n >>> 16), ...u16(n & 65535)];
+    const tiff = [...(little ? [0x49, 0x49] : [0x4d, 0x4d]), ...u16(42), ...u32(8), ...u16(1),
+      ...u16(0x0112), ...u16(3), ...u32(1), ...u16(orientation), 0, 0, ...u32(0)];
+    return [0xff, 0xe1, 0, tiff.length + 8, 0x45, 0x78, 0x69, 0x66, 0, 0, ...tiff];
+  };
+  const frame = [0xff, 0xc0, 0, 11, 8, 0x0b, 0xd0, 0x0f, 0xc0, 1, 1, 0x11, 0];
+  const jpeg = (...segments) => new Uint8Array([0xff, 0xd8, ...segments.flat()]);
+  assert.deepEqual(readJpegOrientation(jpeg(exif(6, false), frame)), { orientation: 6, width: 4032, height: 3024 });
+  assert.deepEqual(readJpegOrientation(jpeg(exif(8, true), frame)), { orientation: 8, width: 4032, height: 3024 });
+  assert.deepEqual(readJpegOrientation(jpeg(frame)), { orientation: 1, width: 4032, height: 3024 });
+  assert.equal(readJpegOrientation(jpeg(exif(6, false))), null);
+  assert.equal(readJpegOrientation(new Uint8Array([0x89, 0x50, 0x4e, 0x47])), null);
 });
