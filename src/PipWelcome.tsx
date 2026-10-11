@@ -27,10 +27,12 @@ export default function PipWelcome({
   audio,
   onChoose,
   onScan,
+  onBingo,
 }: {
   audio: PipAudio
   onChoose: (id: JourneyId) => void
   onScan: () => void
+  onBingo: () => void
 }) {
   const [phase, setPhase] = useState<"loading" | "greeting" | "choices" | "leaving">(
     "loading",
@@ -60,6 +62,7 @@ export default function PipWelcome({
     return () => clearTimeout(timer)
   }, [avatarReady, avatarSettled])
   const speak = useCallback(async (voice: PipVoice, force = false) => {
+    if (audio.liveSession) return
     clearTimeout(choiceTimer.current)
     const current = ++speechRequest.current
     setQueued(false)
@@ -67,7 +70,15 @@ export default function PipWelcome({
     const duration = await (force ? audio.hear(voice) : audio.play(voice))
     if (current !== speechRequest.current) return
     choiceTimer.current = window.setTimeout(() => setPhase("choices"), duration ? duration * 1000 + 600 : 7800)
-  }, [audio.hear, audio.play])
+  }, [audio.hear, audio.play, audio.liveSession])
+  useEffect(() => {
+    if (!audio.liveSession) return
+    speechRequest.current++
+    clearTimeout(choiceTimer.current)
+    pendingHear.current = false
+    setQueued(false)
+    setPhase("choices")
+  }, [audio.liveSession])
   useEffect(() => {
     if ((phase === "loading" || (phase === "choices" && queued)) && avatarReady && entranceDone) {
       void speak(audio.voice, pendingHear.current)
@@ -80,9 +91,9 @@ export default function PipWelcome({
   }, [])
   useEffect(() => {
     if (phase !== "leaving" || !selected) return
-    const timer = window.setTimeout(() => (selected === "scan" ? onScan() : selected === "bingo" ? window.location.assign("/bingo/index.html") : onChoose(selected)), 800)
+    const timer = window.setTimeout(() => (selected === "scan" ? onScan() : selected === "bingo" ? onBingo() : onChoose(selected)), 800)
     return () => clearTimeout(timer)
-  }, [phase, selected, onChoose, onScan])
+  }, [phase, selected, onChoose, onScan, onBingo])
   const skip = () => {
     speechRequest.current++
     clearTimeout(choiceTimer.current)
@@ -210,7 +221,7 @@ export default function PipWelcome({
               <option value="female">Female</option>
             </select>
           </label>
-          <button type="button" className="pip-hear" disabled={phase === "leaving"} onClick={hear}>Hear Pip</button>
+          <button type="button" className="pip-hear" disabled={phase === "leaving" || audio.liveSession} onClick={hear}>Hear Pip</button>
           {phase === "greeting" || phase === "loading" ? (
             <button type="button" onClick={skip}>
               Skip greeting →

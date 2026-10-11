@@ -37,6 +37,8 @@ export default function usePipVoice() {
   const [playing, setPlaying] = useState(false)
   const [pending, setPending] = useState(false)
   const [audioError, setAudioError] = useState("")
+  const [liveSession, setLiveSession] = useState(false)
+  const liveRef = useRef(false)
   const source = useRef<AudioBufferSourceNode | null>(null)
   const meter = useRef<{ node: AnalyserNode; samples: Float32Array<ArrayBuffer> } | null>(null)
   const request = useRef(0)
@@ -75,6 +77,7 @@ export default function usePipVoice() {
     catch { /* Playback will show a useful error. */ }
   }, [preload])
   const play = useCallback(async (selected = voice, force = false, greetingKind: PipGreeting = "welcome"): Promise<number> => {
+    if (liveRef.current) return 0
     stop()
     setAudioError("")
     if (muted && !force) return 0
@@ -137,10 +140,21 @@ export default function usePipVoice() {
     if (next) stop()
   }
   const hear = (selected = voice, greetingKind: PipGreeting = "welcome") => {
+    if (liveRef.current) return Promise.resolve(0)
     setMuted(false)
     save("pip-muted", "false")
     return play(selected, true, greetingKind)
   }
+  const beginLive = useCallback(() => {
+    // A recorded greeting must never feed back into the live agent's microphone.
+    liveRef.current = true
+    stop()
+    setLiveSession(true)
+  }, [stop])
+  const endLive = useCallback(() => {
+    liveRef.current = false
+    setLiveSession(false)
+  }, [])
   useEffect(() => () => {
     request.current++
     if (source.current) {
@@ -151,6 +165,6 @@ export default function usePipVoice() {
     }
     disconnectMeter()
   }, [disconnectMeter])
-  return { voice, muted, playing, pending, audioError, getLevel, preload, prepare, play, hear, stop, chooseVoice, toggleMute }
+  return { voice, muted, playing, pending, liveSession, audioError, getLevel, preload, prepare, play, hear, stop, beginLive, endLive, chooseVoice, toggleMute }
 }
 export type PipAudio = ReturnType<typeof usePipVoice>

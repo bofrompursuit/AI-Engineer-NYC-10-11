@@ -2,6 +2,8 @@ import type { Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { runScan } from "./scanHandler";
 import { recordAnswer, fetchHistory } from "./db";
+import pipSession from "../../api/pip-session.js";
+import pipChat from "../../api/pip-chat.js";
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -56,6 +58,40 @@ export function apiScanMiddleware(): Plugin {
           sendJson(res, 200, await fetchHistory(30));
         } catch (e: any) {
           sendJson(res, 500, { error: String(e?.message ?? e) });
+        }
+      });
+
+      server.middlewares.use("/api/pip-session", async (req: IncomingMessage, res: ServerResponse) => {
+        let body = "";
+        try {
+          body = await readBody(req);
+          if (body.length > 1000) return sendJson(res, 400, { error: "Invalid request" });
+          await pipSession(
+            { method: req.method, headers: req.headers, socket: req.socket, body },
+            {
+              setHeader: (name: string, value: string) => res.setHeader(name, value),
+              status: (code: number) => ({ json: (value: unknown) => sendJson(res, code, value) }),
+            },
+          );
+        } catch {
+          sendJson(res, 500, { error: "Pip could not start a conversation" });
+        }
+      });
+
+      server.middlewares.use("/api/pip-chat", async (req: IncomingMessage, res: ServerResponse) => {
+        let body = "";
+        try {
+          body = await readBody(req);
+          if (body.length > 8000) return sendJson(res, 400, { error: "Invalid request" });
+          await pipChat(
+            { method: req.method, headers: req.headers, socket: req.socket, body },
+            {
+              setHeader: (name: string, value: string) => res.setHeader(name, value),
+              status: (code: number) => ({ json: (value: unknown) => sendJson(res, code, value) }),
+            },
+          );
+        } catch {
+          sendJson(res, 500, { error: "Pip could not answer" });
         }
       });
     },

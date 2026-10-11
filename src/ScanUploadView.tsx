@@ -29,7 +29,7 @@ function celebrate() {
   });
 }
 
-export default function ScanUploadView({ onViewGallery, audio: speech }: { onViewGallery: () => void; audio: PipAudio }) {
+export default function ScanUploadView({ onViewGallery, audio: speech, onPipContext }: { onViewGallery: () => void; audio: PipAudio; onPipContext: (text: string) => void }) {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ScanResult | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
@@ -44,6 +44,21 @@ export default function ScanUploadView({ onViewGallery, audio: speech }: { onVie
   const avatarSettled = useCallback(() => setAvatarReady(true), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const greetingHandled = useRef(false);
+
+  useEffect(() => {
+    if (speech.liveSession) greetingHandled.current = true;
+  }, [speech.liveSession]);
+
+  useEffect(() => {
+    if (!result) {
+      onPipContext("Choose a photo to make a learning challenge. No photo is shared with Pip's conversation.");
+      return;
+    }
+    const answer = selected === null ? "The learner has not answered yet. Guide with hints, without revealing the answer."
+      : selected === result.correctIndex ? `The learner answered correctly. Explanation: ${result.explanation}`
+      : `The learner answered incorrectly. The page showed this explanation: ${result.explanation}`;
+    onPipContext(`Scan result: ${result.subject}, ${result.concept}. ${result.description}. Question: ${result.question}. ${answer}`.slice(0, 1000));
+  }, [result, selected, onPipContext]);
 
   useEffect(() => {
     if (!avatarReady) return;
@@ -156,7 +171,7 @@ export default function ScanUploadView({ onViewGallery, audio: speech }: { onVie
               </>
             )}
             <div className="scan-pip-controls">
-              {status === "idle" && <button type="button" className="btn btn-outline" onClick={() => speech.playing || speech.pending ? speech.stop() : hearPip()}>{speech.playing ? "Stop speaking" : speech.pending ? "Cancel speech" : "Hear PIP"}</button>}
+              {status === "idle" && <button type="button" className="btn btn-outline" disabled={speech.liveSession} onClick={() => speech.playing || speech.pending ? speech.stop() : hearPip()}>{speech.playing ? "Stop speaking" : speech.pending ? "Cancel speech" : "Hear PIP"}</button>}
               <button type="button" className="btn btn-outline" aria-pressed={!speech.muted} onClick={() => { if (speech.muted && status === "idle") hearPip(); else speech.toggleMute(); }}>Sound {speech.muted ? "off" : "on"}</button>
             </div>
             {speech.audioError && status === "idle" && <p className="scan-pip-audio-note" role="status">{speech.audioError}</p>}
