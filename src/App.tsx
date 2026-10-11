@@ -5,6 +5,7 @@ import { journeys, type JourneyId } from "./journeys";
 import usePipVoice from "./usePipVoice";
 import PipWelcome from "./PipWelcome";
 import type { HelpContext } from "./JourneyPlayer";
+import { playArcadeSound } from "./arcadeAudio";
 import { pipReactionDuration, type PipReaction, type PipReactionKind } from "./pipBehavior";
 const PipCompanion = lazy(() => import("./PipCompanion"));
 const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
@@ -365,7 +366,7 @@ function PixelCity() {
         </linearGradient>
       </defs>
       <rect width="200" height="112" fill="url(#sunset)" />
-      <rect x="22" y="12" width="14" height="4" fill="#f7b765" /><rect x="128" y="20" width="18" height="4" fill="#f7b765" /><rect x="150" y="8" width="10" height="3" fill="#f7b765" />
+      <g className="pixel-clouds"><rect x="22" y="12" width="14" height="4" fill="#f7b765" /><rect x="128" y="20" width="18" height="4" fill="#f7b765" /><rect x="150" y="8" width="10" height="3" fill="#f7b765" /></g>
       <rect x="97" y="10" width="6" height="74" fill="#c9b9a8" /><rect x="98" y="6" width="4" height="4" fill="#c9b9a8" />
       {skyline.map(([x, w, h]) => (
         <g key={x}>
@@ -383,27 +384,34 @@ function PixelCity() {
   );
 }
 
-function JoinScreen({ onJoined }: { onJoined: () => void }) {
+function JoinScreen({ onJoined, muted, toggleMute }: { onJoined: () => void; muted: boolean; toggleMute: () => void }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [player, setPlayer] = useState<string | null>(null);
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
-    if (player) return onJoined();
+    if (player) {
+      if (!muted) playArcadeSound("start");
+      return onJoined();
+    }
     const value = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      if (!muted) playArcadeSound("error");
       setError("ENTER A VALID EMAIL");
       return;
     }
     setError("");
     setPlayer(value);
+    if (!muted) playArcadeSound("ready");
   };
 
-  const reset = () => { setPlayer(null); setEmail(""); setError(""); };
+  const reset = () => { if (!muted) playArcadeSound("select"); setPlayer(null); setEmail(""); setError(""); };
 
   return (
     <main className="join page-enter">
+      <div className="join-stage">
+        <div className="join-sparkles" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
       <form className="handheld" onSubmit={submit} noValidate>
         <div className="hh-bezel">
           <div className="hh-progress">
@@ -461,9 +469,16 @@ function JoinScreen({ onJoined }: { onJoined: () => void }) {
             <button type="submit" className="ab-a" aria-label={player ? "A: meet Pip" : "A: sign in"}>A</button>
           </div>
         </div>
-        <div className="hh-bottom" aria-hidden="true"><span>SELECT</span><span>START</span></div>
+        <div className="hh-bottom">
+          <span aria-hidden="true">SELECT</span>
+          <span aria-hidden="true">START</span>
+          <button type="button" className="hh-sound" onClick={() => { if (muted) playArcadeSound("select"); toggleMute(); }} aria-pressed={!muted}>
+            SOUND {muted ? "OFF" : "ON"}
+          </button>
+        </div>
         <div className="hh-grill" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
       </form>
+      </div>
     </main>
   );
 }
@@ -525,7 +540,7 @@ export default function App() {
         {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} />}
         {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
-        {view === "join" && <JoinScreen onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
+        {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
         {view === "scan" && <ScanScreen goBack={() => setView("dashboard")} />}
       </Suspense>
       {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && view !== "scan" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} reaction={reaction} /></Suspense>}
