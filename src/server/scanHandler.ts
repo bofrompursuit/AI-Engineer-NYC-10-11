@@ -174,7 +174,7 @@ export async function runScan(imageBase64: string, mimeType: string): Promise<Sc
   result.articles = await fetchArticles(result.concept);
 
   try {
-    const { insertScan } = await import("./db");
+    const { insertScan } = await import("./db.js");
     result.id = await insertScan({
       subject: result.subject,
       concept: result.concept,
