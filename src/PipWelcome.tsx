@@ -130,7 +130,7 @@ export default function PipWelcome({
                   <PipLoadingAvatar />
                 }
               >
-                <PipAvatar wave={phase !== "loading"} onReady={avatarSettled} />
+                <PipAvatar wave={phase === "greeting"} mood={audio.playing ? "speaking" : "idle"} getLevel={audio.getLevel} onReady={avatarSettled} />
               </Suspense>
             </div>
             <span className="pip-stage-ground" aria-hidden="true" />

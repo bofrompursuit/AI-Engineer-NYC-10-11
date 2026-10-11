@@ -10,8 +10,8 @@ export function preloadPipModels() {
   if (!assets) {
     const loader = new GLTFLoader()
     assets = Promise.allSettled([
-      loader.loadAsync("/models/pip-neutral.glb"),
-      loader.loadAsync("/models/pip-hover-wave.glb"),
+      loader.loadAsync("/models/pip-neutral-expressions.glb"),
+      loader.loadAsync("/models/pip-hover-wave-expressions.glb"),
     ]).then(([neutral, animated]) => {
       if (neutral.status !== "fulfilled") {
         assets = undefined
@@ -43,17 +43,12 @@ export function createPipScene(loaded: PipAssets) {
   carrier.scale.setScalar(2.6 / Math.max(size.x, size.y, size.z))
   rest.position.copy(center).negate()
   carrier.add(rest)
-  const waveModel = loaded.animated ? clone(loaded.animated.scene) : null
   let mixer: THREE.AnimationMixer | undefined
   let action: THREE.AnimationAction | undefined
-  if (waveModel && loaded.animated) {
-    waveModel.position.copy(center).negate()
-    waveModel.visible = false
-    carrier.add(waveModel)
-    if (loaded.animated.animations.length) {
-      mixer = new THREE.AnimationMixer(waveModel)
-      action = mixer.clipAction(loaded.animated.animations[0])
-    }
+  if (loaded.animated?.animations.length) {
+    // Both supplied exports share the same geometry and named object hierarchy.
+    mixer = new THREE.AnimationMixer(rest)
+    action = mixer.clipAction(loaded.animated.animations[0])
   }
   const fit = (width: number, height: number) => {
     camera.aspect = width / height
@@ -62,5 +57,5 @@ export function createPipScene(loaded: PipAssets) {
     camera.updateProjectionMatrix()
   }
   fit(1, 1)
-  return { scene, carrier, camera, rest, waveModel, mixer, action, fit }
+  return { scene, carrier, camera, rest, mixer, action, fit }
 }
