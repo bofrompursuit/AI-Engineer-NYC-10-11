@@ -1,7 +1,14 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { journeys, type JourneyId } from "./journeys";
+import usePipVoice from "./usePipVoice";
+import type { HelpContext } from "./JourneyPlayer";
+const PipWelcome = lazy(() => import("./PipWelcome"));
+const PipCompanion = lazy(() => import("./PipCompanion"));
+const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
+const Celebration = lazy(() => import("./Celebration"));
 
-type View = "dashboard" | "case" | "analytics" | "join";
+type View = "dashboard" | "case" | "analytics" | "join" | "welcome" | "journey";
 
 const Icon = ({
   name,
@@ -123,16 +130,16 @@ const games = [
     progress: "42% complete",
   },
   {
-    id: "cryptic",
+    id: "calculus",
     number: "03",
-    kind: "cryptic",
-    tag: "RECOMMENDED FOR YOU",
-    title: "CRYPTIC SHIELD",
-    subtitle: "GAUNTLET 09",
-    description: "Defend the digital city. Solve advanced math and pattern logic traps.",
+    kind: "calculus",
+    tag: "RATES & CHANGE",
+    title: "REACTOR RUN",
+    subtitle: "CALCULUS CHALLENGE",
+    description: "Use derivatives and integrals to bring a reactor back online.",
     sponsor: "RAG by Snowflake Cortex",
     sponsorDetail: "Adaptive knowledge",
-    progress: "Hard · +800 XP",
+    progress: "3 challenges · +300 XP",
   },
 ];
 
@@ -156,13 +163,7 @@ function GameArt({ kind }: { kind: string }) {
       </div>
     );
   }
-  return (
-    <div className="game-art cryptic">
-      <div className="binary ring-one">01011001</div>
-      <div className="binary ring-two">101 · 010</div>
-      <div className="lock-body"><Icon name="lock" size={44} /></div>
-    </div>
-  );
+  return <div className="game-art calculus"><span className="calculus-glyph">∫</span><svg viewBox="0 0 180 140" aria-hidden="true"><path d="M20 120H170M20 120V10" /><path className="calculus-curve" d="M20 118Q90 118 157 20" /></svg><span className="calculus-note">f′(x) = 2x</span></div>;
 }
 
 function GameCard({ game, onStart }: { game: (typeof games)[number]; onStart: () => void }) {
@@ -218,7 +219,7 @@ function QrCode() {
   return <div className="qr" aria-label="QR code placeholder">{cells.map((cell) => <i key={cell} style={{ gridArea: `${Math.floor(cell / 9) + 1} / ${(cell % 9) + 1}` }} />)}</div>;
 }
 
-function Dashboard({ openCase, openAnalytics, openJoin }: { openCase: () => void; openAnalytics: () => void; openJoin: () => void }) {
+function Dashboard({ openCase, openAnalytics, openJoin, openJourney }: { openCase: () => void; openAnalytics: () => void; openJoin: () => void; openJourney: (id: JourneyId) => void }) {
   return (
     <main className="dashboard page-enter">
       <section className="hero-row">
@@ -233,7 +234,7 @@ function Dashboard({ openCase, openAnalytics, openJoin }: { openCase: () => void
         </div>
       </section>
       <section className="games-grid">
-        {games.map((game) => <GameCard key={game.id} game={game} onStart={game.id === "case" ? openCase : openAnalytics} />)}
+        {games.map((game) => <GameCard key={game.id} game={game} onStart={() => openJourney(game.id === "case" ? "biopharma" : game.id === "mars" ? "physics" : "calculus")} />)}
       </section>
       <section className="lower-grid">
         <article className="panel feed-panel">
@@ -271,51 +272,6 @@ function Dashboard({ openCase, openAnalytics, openJoin }: { openCase: () => void
             <span><i className="error" /><b>Agent Error</b><em>Recovered ↗</em></span>
           </div>
         </article>
-      </section>
-    </main>
-  );
-}
-
-function CaseScreen({ goBack, openAnalytics }: { goBack: () => void; openAnalytics: () => void }) {
-  return (
-    <main className="subpage page-enter">
-      <div className="subpage-top">
-        <Button variant="outline" onClick={goBack}>← MISSION HUB</Button>
-        <span className="case-live"><i /> CASE ENVIRONMENT LIVE</span>
-        <span className="case-id">CASE ID / PF-734-GEM</span>
-      </div>
-      <section className="case-layout">
-        <div className="case-main">
-          <span className="eyebrow"><i /> FORENSIC BIOCHEM / LEVEL 04</span>
-          <div className="case-title">The Helix <em>Breach</em></div>
-          <p className="case-deck">At 02:14 UTC, Helixora Labs detected an unauthorized export of trial data. Follow the molecular signature, interrogate the evidence, and identify the source before the file reaches the dark web.</p>
-          <div className="evidence-board">
-            <div className="board-grid" />
-            <div className="evidence molecule"><span>DNA MATCH</span><b>94.7%</b><i /></div>
-            <div className="evidence packet"><span>PACKET / 07</span><b>ACG-TT-091</b></div>
-            <div className="evidence fingerprint"><span>ENCRYPTED STRAND</span><div className="strand">{[1,2,3,4,5,6].map(n => <i key={n} />)}</div></div>
-            <div className="connection c-one" /><div className="connection c-two" />
-            <span className="scan-line" />
-          </div>
-        </div>
-        <aside className="mission-panel">
-          <div className="mission-status"><small>CURRENT OBJECTIVE</small><strong>Isolate the altered sequence</strong><span>02 / 05</span></div>
-          <div className="objective">
-            <span className="objective-number">02</span>
-            <div><small>SEQUENCE ANALYSIS</small><strong>Which base-pair mutation proves the dataset was altered?</strong></div>
-          </div>
-          <div className="sequence-options">
-            {["A–T → G–C at locus 118", "C–G → T–A at locus 734", "A–T → C–G at locus 091"].map((option, index) => (
-              <button key={option} className={index === 1 ? "selected" : ""} type="button"><span>{String.fromCharCode(65 + index)}</span>{option}{index === 1 && <Icon name="check" size={18} />}</button>
-            ))}
-          </div>
-          <div className="ai-brief">
-            <span className="ai-icon">✦</span>
-            <div><small>GEMINI FIELD NOTE</small><p>The anomaly appears at the same locus as the exfiltration packet ID. Correlation is likely significant.</p></div>
-          </div>
-          <Button onClick={openAnalytics} className="submit-answer">SUBMIT EVIDENCE <Icon name="arrow" /></Button>
-          <div className="case-reward"><span>REWARD <b>+650 XP</b></span><span>INTEL <b>+12</b></span><span>TIME <b>08:42</b></span></div>
-        </aside>
       </section>
     </main>
   );
@@ -426,7 +382,7 @@ function JoinScreen({ onJoined }: { onJoined: () => void }) {
               <div className="hh-card hh-success" role="status">
                 <small>PLAYER SPAWNED</small>
                 <strong>{player}</strong>
-                <span>Press A to enter the hub</span>
+                <span>Press A to meet Pip</span>
               </div>
             ) : (
               <div className="hh-card hh-qr">
@@ -466,7 +422,7 @@ function JoinScreen({ onJoined }: { onJoined: () => void }) {
           </div>
           <div className="ab">
             <button type="button" className="ab-b" onClick={reset} aria-label="B: reset">B</button>
-            <button type="submit" className="ab-a" aria-label={player ? "A: enter mission hub" : "A: sign in"}>A</button>
+            <button type="submit" className="ab-a" aria-label={player ? "A: meet Pip" : "A: sign in"}>A</button>
           </div>
         </div>
         <div className="hh-bottom" aria-hidden="true"><span>SELECT</span><span>START</span></div>
@@ -477,23 +433,52 @@ function JoinScreen({ onJoined }: { onJoined: () => void }) {
 }
 
 export default function App() {
-  const [view, setViewState] = useState<View>(() =>
-    new URLSearchParams(window.location.search).get("view") === "join" ? "join" : "dashboard",
-  );
-  const setView = (next: View) => {
+  const requested = new URLSearchParams(window.location.search);
+  const initialMission = journeys.find((item) => item.id === requested.get("mission"))?.id || "physics";
+  const [journeyId, setJourneyId] = useState<JourneyId>(initialMission);
+  const [view, setViewState] = useState<View>(() => requested.get("view") === "join" ? "join" : requested.get("view") === "journey" ? "journey" : "dashboard");
+  const [pipUnlocked, setPipUnlocked] = useState(view === "journey");
+  const [context, setContext] = useState<HelpContext | null>(null);
+  const [celebration, setCelebration] = useState<{ kind: "answer" | "complete"; serial: number } | null>(null);
+  const audio = usePipVoice();
+  const setView = useCallback((next: View) => {
+    audio.stop();
+    setCelebration(null);
     setViewState(next);
     const url = new URL(window.location.href);
-    if (next === "join") url.searchParams.set("view", "join");
+    url.searchParams.delete("mission");
+    if (next === "join" || next === "welcome") url.searchParams.set("view", "join");
+    else if (next === "case") { url.searchParams.set("view", "journey"); url.searchParams.set("mission", "biopharma"); }
     else url.searchParams.delete("view");
     window.history.replaceState(null, "", url);
-  };
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [audio.stop]);
+  const openJourney = useCallback((id: JourneyId) => {
+    setJourneyId(id); setPipUnlocked(true); setView("journey");
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", "journey"); url.searchParams.set("mission", id);
+    window.history.replaceState(null, "", url);
+  }, [setView]);
+  const celebrate = useCallback((kind: "answer" | "complete") => setCelebration((previous) => ({ kind, serial: (previous?.serial || 0) + 1 })), []);
+  const clearCelebration = useCallback(() => setCelebration(null), []);
+  useEffect(() => {
+    if (view === "join") {
+      void import("./PipWelcome"); void import("./PipAvatar");
+    }
+  }, [view]);
+  const activeJourney = view === "case" ? "biopharma" : journeyId;
   return (
     <div className="app-shell">
-      <Header view={view} setView={setView} />
-      {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} />}
-      {view === "case" && <CaseScreen goBack={() => setView("dashboard")} openAnalytics={() => setView("analytics")} />}
-      {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
-      {view === "join" && <JoinScreen onJoined={() => setView("dashboard")} />}
+      {view !== "welcome" && <Header view={view} setView={setView} />}
+      <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
+        {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} />}
+        {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} />}
+        {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onCelebrate={celebrate} />}
+        {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
+        {view === "join" && <JoinScreen onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.play(); }} />}
+      </Suspense>
+      {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} celebrating={Boolean(celebration)} /></Suspense>}
+      {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}
     </div>
   );
 }
