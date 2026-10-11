@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import ScanScreen from "./ScanScreen";
 import { journeys, type JourneyId } from "./journeys";
@@ -7,11 +7,11 @@ import PipWelcome from "./PipWelcome";
 import type { HelpContext } from "./JourneyPlayer";
 import { playArcadeSound } from "./arcadeAudio";
 import { pipReactionDuration, type PipReaction, type PipReactionKind } from "./pipBehavior";
-const PipCompanion = lazy(() => import("./PipCompanion"));
+const PipCompanion = lazy(() => import("./PipConversation"));
 const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
 const Celebration = lazy(() => import("./Celebration"));
 
-type View = "dashboard" | "case" | "analytics" | "join" | "welcome" | "journey" | "scan";
+type View = "dashboard" | "case" | "analytics" | "join" | "welcome" | "journey" | "scan" | "bingo";
 
 const Icon = ({
   name,
@@ -254,7 +254,7 @@ function QrCode() {
   return <div className="qr" aria-label="QR code placeholder">{cells.map((cell) => <i key={cell} style={{ gridArea: `${Math.floor(cell / 9) + 1} / ${(cell % 9) + 1}` }} />)}</div>;
 }
 
-function Dashboard({ openCase, openAnalytics, openJoin, openJourney, openScan }: { openCase: () => void; openAnalytics: () => void; openJoin: () => void; openJourney: (id: JourneyId) => void; openScan: () => void }) {
+function Dashboard({ openCase, openAnalytics, openJoin, openJourney, openScan, openBingo }: { openCase: () => void; openAnalytics: () => void; openJoin: () => void; openJourney: (id: JourneyId) => void; openScan: () => void; openBingo: () => void }) {
   return (
     <main className="dashboard page-enter">
       <section className="hero-row">
@@ -269,7 +269,7 @@ function Dashboard({ openCase, openAnalytics, openJoin, openJourney, openScan }:
         </div>
       </section>
       <section className="games-grid">
-        {games.map((game) => <GameCard key={game.id} game={game} onStart={game.id === "bingo" ? () => window.location.assign("/bingo/index.html") : game.id === "scan" ? openScan : () => openJourney(game.id === "case" ? "biopharma" : "physics")} />)}
+        {games.map((game) => <GameCard key={game.id} game={game} onStart={game.id === "bingo" ? openBingo : game.id === "scan" ? openScan : () => openJourney(game.id === "case" ? "biopharma" : "physics")} />)}
       </section>
       <section className="lower-grid">
         <article className="panel feed-panel">
@@ -485,9 +485,11 @@ export default function App() {
   const requested = new URLSearchParams(window.location.search);
   const initialMission = journeys.find((item) => item.id === requested.get("mission"))?.id || "physics";
   const [journeyId, setJourneyId] = useState<JourneyId>(initialMission);
-  const [view, setViewState] = useState<View>(() => requested.get("view") === "journey" ? "journey" : requested.get("view") === "scan" ? "scan" : requested.get("view") === "hub" ? "dashboard" : "join");
-  const [pipUnlocked, setPipUnlocked] = useState(view === "journey");
+  const [view, setViewState] = useState<View>(() => requested.get("view") === "journey" ? "journey" : requested.get("view") === "scan" ? "scan" : requested.get("view") === "bingo" ? "bingo" : requested.get("view") === "hub" ? "dashboard" : "join");
   const [context, setContext] = useState<HelpContext | null>(null);
+  const [scanContext, setScanContext] = useState("Choose a photo to make a learning challenge. No photo is shared with Pip's conversation.");
+  const [bingoContext, setBingoContext] = useState("Choose a square, solve its math problem, and stamp four in a row.");
+  const bingoFrame = useRef<HTMLIFrameElement>(null);
   const [celebration, setCelebration] = useState<{ kind: "answer" | "complete"; serial: number } | null>(null);
   const [reaction, setReaction] = useState<PipReaction | null>(null);
   const audio = usePipVoice();
@@ -500,14 +502,14 @@ export default function App() {
     const url = new URL(window.location.href);
     url.searchParams.delete("mission");
     if (next === "join" || next === "welcome") url.searchParams.set("view", "join");
-    else if (next === "scan") url.searchParams.set("view", "scan");
+    else if (next === "scan" || next === "bingo") url.searchParams.set("view", next);
     else if (next === "case") { url.searchParams.set("view", "journey"); url.searchParams.set("mission", "biopharma"); }
     else url.searchParams.set("view", "hub");
     window.history.replaceState(null, "", url);
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [audio.stop, audio.prepare]);
   const openJourney = useCallback((id: JourneyId) => {
-    setJourneyId(id); setPipUnlocked(true); setView("journey");
+    setJourneyId(id); setView("journey");
     const url = new URL(window.location.href);
     url.searchParams.set("view", "journey"); url.searchParams.set("mission", id);
     window.history.replaceState(null, "", url);
@@ -531,19 +533,38 @@ export default function App() {
       audio.preload();
     }
   }, [view, audio.preload]);
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== bingoFrame.current?.contentWindow) return;
+      if (event.data?.type === "pip-bingo-context" && typeof event.data.text === "string")
+        setBingoContext(event.data.text.slice(0, 500));
+      if (event.data?.type === "pip-bingo-back") setView("dashboard");
+    };
+    window.addEventListener("message", receive);
+    return () => window.removeEventListener("message", receive);
+  }, [setView]);
   const activeJourney = view === "case" ? "biopharma" : journeyId;
+  const pageContext = view === "join" ? "Join screen. The email field is a demo check, not an account. Help the learner get started."
+    : view === "welcome" ? "Welcome screen. Choices: A Physics, B Scan & Learn with a photo, C TINY Math Bingo. Help the learner choose."
+    : view === "dashboard" ? "Mission hub. Learners can choose Physics, Scan & Learn, TINY Math Bingo, the Biopharma case file, or analytics."
+    : view === "scan" ? `Scan & Learn. ${scanContext}`
+    : view === "analytics" ? "Analytics page. Metrics shown here are sample demo data, not a live learner account."
+    : view === "bingo" ? `TINY Math Bingo. ${bingoContext}`
+    : context ? `${view === "case" ? "Biopharma case file" : "Lesson"}: ${context.question.question} Concept: ${context.question.concept} Hint: ${context.question.hint}. ${context.solved ? `Solved. Explanation: ${context.question.explanation}` : "Not solved. Guide with hints and do not reveal the final answer."}`
+    : "Lesson complete. Congratulate the learner and help them choose another mission.";
   return (
     <div className="app-shell">
       {view !== "welcome" && view !== "join" && <Header view={view} setView={setView} />}
       <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
-        {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} onScan={() => setView("scan")} />}
-        {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} />}
+        {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} onScan={() => setView("scan")} onBingo={() => setView("bingo")} />}
+        {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} openBingo={() => setView("bingo")} />}
         {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
-        {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
-        {view === "scan" && <ScanScreen audio={audio} goBack={() => setView("dashboard")} />}
+        {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); audio.prepare(); }} />}
+        {view === "scan" && <ScanScreen audio={audio} goBack={() => setView("dashboard")} onPipContext={setScanContext} />}
+        {view === "bingo" && <main className="pip-bingo-page"><iframe ref={bingoFrame} title="TINY Math Bingo" src="/bingo/index.html" /></main>}
       </Suspense>
-      {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && view !== "scan" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} reaction={reaction} /></Suspense>}
+      <Suspense fallback={null}><PipCompanion context={view === "journey" || view === "case" ? context : null} pageContext={pageContext} audio={audio} reaction={reaction} compact={view === "welcome" || view === "join"} /></Suspense>
       {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}
     </div>
   );

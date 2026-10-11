@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ScanUploadView from "./ScanUploadView";
 import GalleryScreen from "./GalleryScreen";
 import type { PipAudio } from "./usePipVoice";
 
 type SubView = "upload" | "gallery";
 
-export default function ScanScreen({ goBack, audio }: { goBack: () => void; audio: PipAudio }) {
+export default function ScanScreen({ goBack, audio, onPipContext }: { goBack: () => void; audio: PipAudio; onPipContext: (text: string) => void }) {
   const [subView, setSubView] = useState<SubView>("upload");
   const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
+  useEffect(() => {
+    if (subView === "gallery") onPipContext("Gallery of earlier scans. Help the learner understand what the gallery records. Do not claim to see a selected photo or live gallery data.");
+  }, [subView, onPipContext]);
 
   const goToGallery = () => {
     setGalleryRefreshKey((k) => k + 1);
@@ -38,7 +41,7 @@ export default function ScanScreen({ goBack, audio }: { goBack: () => void; audi
         </div>
       </section>
 
-      {subView === "upload" && <ScanUploadView audio={audio} onViewGallery={goToGallery} />}
+      {subView === "upload" && <ScanUploadView audio={audio} onViewGallery={goToGallery} onPipContext={onPipContext} />}
       {subView === "gallery" && <GalleryScreen refreshKey={galleryRefreshKey} />}
     </main>
   );

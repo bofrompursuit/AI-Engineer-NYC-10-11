@@ -2,6 +2,50 @@
 
 React/Vite hackathon prototype with a Game Boy join screen and Pip learning companion.
 
+## Site-wide Pip conversation
+
+The bottom-right Pip panel stays mounted across Join, Welcome, Mission hub, lessons,
+Case file, Scan, Gallery, Analytics, and TINY Math Bingo. Learners can type to Pip
+or select **Talk to Pip** to start a microphone session. Voice starts only after
+that choice and microphone permission. The panel keeps its visible transcript
+as the learner changes pages. Text uses the server-side Gemini API. Voice uses
+an ElevenLabs Agent configured with Gemini. Starting voice passes the recent
+visible transcript to the agent as context.
+Selecting voice immediately stops Pip's recorded welcome or Scan greeting,
+including a greeting still loading. While voice is starting or active, those
+recordings cannot restart. The welcome screen moves straight to its choices.
+Pip receives the current page and challenge summary; Scan photos and join emails
+are not sent to the conversation. Bingo stays in its existing page inside an
+iframe so the parent Pip session remains mounted.
+
+To enable text chat, set `GEMINI_API_KEY` in this checkout's ignored `.env.local`.
+To enable voice, create one private ElevenLabs Agent, choose a Gemini model
+for its LLM, allow prompt overrides, and set
+`ELEVENLABS_AGENT_ID` and `ELEVENLABS_API_KEY` in this checkout's ignored
+`.env.local`. Restart the dev server after setting them. The server's
+`/api/pip-chat` route calls Gemini for text; `/api/pip-session` issues a
+short-lived WebRTC conversation token for voice. Long-lived keys stay on the
+server. The existing recorded greetings still play without these values.
+See the ElevenLabs [React SDK](https://elevenlabs.io/docs/eleven-agents/libraries/react)
+and [Gemini model setup](https://elevenlabs.io/docs/eleven-agents/customization/llm).
+
+For a noisy room, switch **Noisy room** on in Pip's panel. The microphone then
+stays muted until the learner holds **Hold to speak** with a pointer or the
+Space/Enter key. We request browser echo cancellation, noise suppression, and
+automatic gain control, and pass the permitted microphone device to the SDK
+when the browser exposes its ID. A headset still helps in loud places.
+In the ElevenLabs agent's [conversation flow settings](https://elevenlabs.io/docs/eleven-agents/customization/conversation-flow),
+start with Patient turn eagerness and test a longer silence timeout (around
+10–15 seconds) if Pip cuts learners off. Keep the agent's first message short,
+or let the learner speak first; the recorded intro already welcomes them.
+Test with actual background voices and speakers before treating this as
+reliable noise handling. The live agent has not yet been configured or tested.
+
+The join email is only a demo check, not authentication. Both routes have
+in-memory, per-instance request limits. Before a public launch with paid
+providers, add real user authentication, a shared rate limit, and spending
+limits. Live ElevenLabs and Gemini conversations are not yet verified.
+
 > The **Scan** tab (photo → Gemini vision quiz → Nimble articles → Tiger Data gallery) has its
 > own integration notes in [`SCAN.md`](SCAN.md).
 
@@ -29,7 +73,8 @@ Use Node 22+ (verified with Node 24) and pnpm:
    cp .env.example .env.local
    ```
 
-2. Open `.env.local` and fill in `GEMINI_API_KEY` to enable image quizzes. Add a
+2. Open `.env.local` and fill in `GEMINI_API_KEY` to enable image quizzes and
+   Pip text chat. Add a
    `NIMBLE_API_KEY` for related articles and the `TIGER_*` connection values for scan
    storage and the gallery. The template explains the optional settings. Pip's
    bundled greeting clips work without an ElevenLabs key.
@@ -45,9 +90,11 @@ pnpm test
 pnpm build
 ```
 
-Vite defaults to port 8443. `/api/pip-help` is a Vercel function; Vite alone does not serve it. Built-in hints and explanations work without the API. Free-form requests report that live Q&A is unavailable if the function, key, or provider is unavailable.
+Vite defaults to port 8443. It serves `/api/pip-chat` and `/api/pip-session`
+locally. Built-in hints and explanations work without provider keys. The older `/api/pip-help` Vercel route
+remains in the repository but is no longer used by the Pip panel.
 
-## Live Q&A on Vercel
+## Older lesson Q&A route
 
 Set `GEMINI_API_KEY` on the server, never as a `VITE_` variable. Optional `GEMINI_MODEL` overrides the default `gemini-3.5-flash-lite`. Set `PIP_HELP_ENABLED=false` to disable provider requests. The route uses Google's [generateContent API](https://ai.google.dev/api/generate-content) and the [current model list](https://ai.google.dev/gemini-api/docs/models).
 

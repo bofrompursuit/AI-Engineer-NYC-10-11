@@ -11,6 +11,7 @@
     "format": "oxfmt"
   },
   "dependencies": {
+    "@elevenlabs/react": "^1.17.0",
     "canvas-confetti": "^1.9.4",
     "pg": "^8.23.1",
     "qrcode.react": "^4.2.0",
