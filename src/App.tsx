@@ -2,8 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent, type 
 import { QRCodeSVG } from "qrcode.react";
 import { journeys, type JourneyId } from "./journeys";
 import usePipVoice from "./usePipVoice";
+import PipWelcome from "./PipWelcome";
 import type { HelpContext } from "./JourneyPlayer";
-const PipWelcome = lazy(() => import("./PipWelcome"));
 const PipCompanion = lazy(() => import("./PipCompanion"));
 const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
 const Celebration = lazy(() => import("./Celebration"));
@@ -463,9 +463,12 @@ export default function App() {
   const clearCelebration = useCallback(() => setCelebration(null), []);
   useEffect(() => {
     if (view === "join") {
-      void import("./PipWelcome"); void import("./PipAvatar");
+      void import("./PipAvatar");
+      void import("./pipAssets").then((assets) => assets.preloadPipModels()).catch(() => {});
+      const poster = new Image(); poster.src = "/images/pip-loading.png";
+      audio.preload();
     }
-  }, [view]);
+  }, [view, audio.preload]);
   const activeJourney = view === "case" ? "biopharma" : journeyId;
   return (
     <div className="app-shell">
@@ -475,7 +478,7 @@ export default function App() {
         {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} />}
         {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onCelebrate={celebrate} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
-        {view === "join" && <JoinScreen onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.play(); }} />}
+        {view === "join" && <JoinScreen onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
       </Suspense>
       {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} celebrating={Boolean(celebration)} /></Suspense>}
       {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}

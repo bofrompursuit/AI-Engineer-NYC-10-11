@@ -8,6 +8,7 @@ import {
 } from "react"
 import type { HelpContext } from "./JourneyPlayer"
 import type { PipAudio, PipVoice } from "./usePipVoice"
+import { PipLoadingAvatar } from "./PipPoster"
 const PipAvatar = lazy(() => import("./PipAvatar"))
 type Message = {
   who: "you" | "pip"
@@ -220,7 +221,7 @@ export default function PipCompanion({
             >
               {audio.muted ? "Sound off" : "Sound on"}
             </button>
-            <button type="button" onClick={audio.hear}>
+            <button type="button" onClick={() => void audio.hear()}>
               Hear Pip
             </button>
           </div>
@@ -244,7 +245,7 @@ export default function PipCompanion({
         onBlur={() => setHover(false)}
       >
         <span className="pip-mini">
-          <Suspense fallback={<span className="pip-mini-fallback">✦</span>}>
+          <Suspense fallback={<PipLoadingAvatar />}>
             <PipAvatar wave={open || hover || celebrating} />
           </Suspense>
         </span>
