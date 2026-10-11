@@ -3,7 +3,7 @@
   --pip-xs: 4px; --pip-sm: 8px; --pip-md: 16px; --pip-lg: 24px; --pip-xl: 32px;
   --pip-radius: 10px; --pip-small: 11px; --pip-body: 13px; --pip-title: 28px;
   --pip-leading: 1.65; --pip-stage: #080b11; --pip-border: 3px solid var(--line);
-  --pip-enter: .9s; --pip-exit: .75s; --pip-help-width: 360px; --pip-dock: 104px;
+  --pip-enter: .9s; --pip-exit: .75s; --pip-crossfade: .4s; --pip-float: 1.8s; --pip-float-distance: 6px; --pip-help-width: 360px; --pip-dock: 104px;
 }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .pip-welcome button, .learning-journey button, .pip-companion button { cursor: pointer; }
@@ -18,9 +18,12 @@
 .pip-flight { width: 86%; height: 100%; z-index: 1; animation: pip-arrive var(--pip-enter) cubic-bezier(.2,.8,.3,1) both; }
 .phase-leaving .pip-flight { animation: pip-depart var(--pip-exit) ease-in both; }
 .pip-avatar { position: relative; width: 100%; height: 100%; }
-.pip-avatar canvas { display: block; width: 100%; height: 100%; }
-.pip-fallback { position: absolute; inset: 0; width: 100%; height: 100%; padding: var(--pip-xl); }
-.pip-avatar:not(.is-ready) canvas { opacity: 0; }
+.pip-avatar canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; opacity: 0; transition: opacity var(--pip-crossfade) ease; }
+.pip-avatar.is-ready canvas { opacity: 1; }
+.pip-poster { position: absolute; inset: 0; display: block; opacity: 1; transition: opacity var(--pip-crossfade) ease; }
+.pip-poster img { display: block; width: 100%; height: 100%; object-fit: contain; animation: pip-waiting-float var(--pip-float) ease-in-out infinite; }
+.pip-avatar.is-ready .pip-poster { opacity: 0; }
+.pip-avatar.is-ready .pip-poster img { animation: none; }
 .pip-stage-ground { position: absolute; bottom: 9%; width: 38%; height: 5%; border-radius: 50%; background: var(--mint); filter: blur(14px); opacity: .18; }
 .pip-pixels { position: absolute; inset: 0; pointer-events: none; }
 .pip-pixels i { position: absolute; width: 4px; height: 4px; background: var(--mint); opacity: .5; }
@@ -39,6 +42,7 @@
 .journey-choice small { display: block; color: var(--muted); font-size: var(--pip-small); line-height: 1.5; margin-top: var(--pip-xs); }
 .pip-welcome-controls, .pip-settings { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--pip-sm); margin-top: var(--pip-md); font-size: var(--pip-small); }
 .pip-welcome-controls button { padding: var(--pip-sm) 0; background: transparent; color: var(--space); border: 0; text-decoration: underline; text-underline-offset: 3px; }
+.pip-welcome-controls .pip-hear { padding: var(--pip-sm) var(--pip-md); background: var(--space); color: var(--ink); border-radius: var(--pip-radius); text-decoration: none; font-weight: 700; }
 .pip-welcome-controls select { color: var(--space); border: 0; background: transparent; font: inherit; }
 .pip-audio-note { font-size: var(--pip-small); line-height: 1.5; margin: var(--pip-sm) 0; }.pip-audio-note button { background: transparent; border: 0; color: inherit; text-decoration: underline; }
 .learning-journey { max-width: 1280px; margin: auto; padding-bottom: calc(var(--pip-dock) + var(--pip-xl) * 2); }
@@ -67,7 +71,7 @@
 .completion-badge { font-size: 72px; color: var(--mint); line-height: 1; }.journey-complete h1 { font-size: 48px; margin: 0; outline: none; }.journey-complete p { color: var(--muted); font-size: var(--pip-body); line-height: var(--pip-leading); margin: 0; }
 .earned-xp { font-family: "Pixelify Sans", monospace; color: var(--mint); font-size: 40px; }.earned-xp span { display: block; font: var(--pip-small) "Space Mono", monospace; letter-spacing: 2px; }.journey-complete .btn { min-height: 48px; padding: var(--pip-md); }
 .pip-companion { position: fixed; z-index: 40; right: var(--pip-lg); bottom: max(var(--pip-md), env(safe-area-inset-bottom)); display: grid; justify-items: end; gap: var(--pip-sm); }
-.pip-launcher { display: grid; justify-items: center; border: 0; background: transparent; padding: 0; color: var(--ink); }.pip-mini { display: block; width: var(--pip-dock); height: var(--pip-dock); }.pip-mini .pip-fallback { padding: 0; }.pip-mini-fallback { font-size: 60px; color: var(--mint); }
+.pip-launcher { display: grid; justify-items: center; border: 0; background: transparent; padding: 0; color: var(--ink); }.pip-mini { display: block; width: var(--pip-dock); height: var(--pip-dock); }.pip-mini-fallback { font-size: 60px; color: var(--mint); }
 .pip-launcher-label { margin-top: -8px; position: relative; padding: var(--pip-sm) var(--pip-md); border: 2px solid var(--line); background: var(--panel); border-radius: var(--pip-radius); font-size: var(--pip-small); box-shadow: 0 3px var(--pip-stage); }
 .pip-help { width: min(var(--pip-help-width), calc(100vw - var(--pip-xl))); overflow: hidden; color: var(--ink); }
 .pip-help-heading { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding: var(--pip-sm) var(--pip-md); }.pip-help-heading > span { display: flex; align-items: center; gap: var(--pip-sm); }.pip-help-heading strong { font-family: "Pixelify Sans", monospace; font-size: 21px; }.pip-help-heading button { border: 0; background: transparent; color: var(--muted); font-size: 28px; padding: 0 var(--pip-sm); }
@@ -81,6 +85,7 @@
 .celebration { pointer-events: none; position: fixed; inset: 0; overflow: hidden; z-index: 50; }.confetti { position: absolute; left: var(--x); top: -16px; width: 7px; height: 12px; background: var(--color); animation: confetti-fall 2.3s var(--delay) ease-in both; }.celebration-answer .confetti { top: 28%; animation-duration: 1.1s; }
 .launch-rocket { position: absolute; bottom: -110px; width: 44px; animation: rocket-launch 2.5s ease-out both; }.launch-rocket svg { width: 100%; }.rocket-0 { left: 20%; }.rocket-1 { left: 48%; animation-delay: .15s; }.rocket-2 { left: 77%; animation-delay: .3s; }
 @keyframes pip-arrive { from { transform: translate(-130%, 25%) rotate(-16deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pip-waiting-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(calc(-1 * var(--pip-float-distance))); } }
 @keyframes pip-depart { to { transform: translate(130%, -30%) rotate(14deg) scale(.6); opacity: 0; } }
 @keyframes pip-choices { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes confetti-fall { to { transform: translate(var(--drift), 100dvh) rotate(var(--turn)); opacity: 0; } }
@@ -96,5 +101,6 @@
   .pip-welcome { padding: var(--pip-md); }.pip-handheld .hh-bezel, .pip-handheld .hh-progress { padding: var(--pip-sm); }.pip-handheld .hh-progress h1 { font-size: 24px; }.journey-choice { padding: var(--pip-sm); gap: var(--pip-sm); }.journey-choice strong { font-size: 18px; }.pip-companion { right: var(--pip-md); }.pip-mini { width: 88px; height: 88px; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .pip-poster img { animation: none; }.pip-poster, .pip-avatar canvas { transition: none; }
   .pip-flight, .journey-choices, .page-enter { animation: none !important; transform: none !important; }.celebration { display: none; }.pip-welcome button, .learning-journey button { transition: none; }
 }

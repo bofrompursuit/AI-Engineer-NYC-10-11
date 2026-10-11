@@ -5,11 +5,11 @@ React/Vite hackathon prototype with a Game Boy join screen and Pip learning comp
 ## Pip flow
 
 1. Open `?view=join`, enter a valid email, and press A. This is a demo email check, not authentication or account creation.
-2. Press A again to meet Pip. Pip floats in and waves on a dark display, with a spoken greeting and matching captions. Skip opens the journey choices. Sound and voice preferences are saved in browser local storage.
+2. Pip's models, matching still render, and both greeting clips preload in the background during join. Press A again to meet Pip. The floating still crossfades into the first rendered 3D frame; Pip then waves and speaks. The enter gesture prepares sound before the delayed greeting. Hear Pip is available throughout, and Skip opens the journey choices. Sound and voice preferences are saved in browser local storage.
 3. Choose A: Physics, B: Calculus, or C: Biopharma Cyber Detective. Each starter journey has three authored questions with answer validation, hints, and explanations.
 4. Pip remains in the corner. Correct answers trigger short confetti; finishing all three challenges triggers rockets. Reduced motion disables these animations. XP earned in a journey is a local demo display; the existing dashboard metrics remain sample data.
 
-The supplied GLBs are in `public/models`. A simple mascot illustration is shown if WebGL or model loading fails. The two short greeting clips are in `public/audio`, generated with these ElevenLabs voices:
+The supplied GLBs are in `public/models`. `public/images/pip-loading.png` is a transparent render of the neutral GLB using the live camera and lighting. It stays visible if WebGL or model loading fails. The two short greeting clips are in `public/audio`, generated with these ElevenLabs voices:
 
 - Male: `s6pb93K3LygWF3wDe6zf`
 - Female: `AdWNY9CsbvFfDZr1rOOe`
@@ -56,4 +56,6 @@ API tests mock Gemini to check invalid requests, missing configuration, failure 
 - Desktop (1280 × 900) and phone (390 × 844) layouts. The phone lesson scrolls above Pip without covering the answer controls. Reduced motion hides celebrations and holds Pip still.
 - TypeScript, six API tests, and production build. The lazy Three.js chunk triggers Vite's size warning.
 
-Live Gemini, real authentication, and simulated asset-loading failures remain unverified.
+The local loading update was also checked with slow network simulation, blocked model downloads, blocked audio downloads followed by replay recovery, both voices, mute/replay, and reduced motion. The corner avatar reuses the preloaded models without new model requests.
+
+Live Gemini and real authentication remain unverified.

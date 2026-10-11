@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { journeys, type JourneyId } from "./journeys"
 import { greeting, type PipAudio, type PipVoice } from "./usePipVoice"
+import { PipLoadingAvatar } from "./PipPoster"
 const PipAvatar = lazy(() => import("./PipAvatar"))
 
 export default function PipWelcome({
@@ -10,33 +11,79 @@ export default function PipWelcome({
   audio: PipAudio
   onChoose: (id: JourneyId) => void
 }) {
-  const [phase, setPhase] = useState<"greeting" | "choices" | "leaving">(
-    "greeting",
+  const [phase, setPhase] = useState<"loading" | "greeting" | "choices" | "leaving">(
+    "loading",
   )
   const [selected, setSelected] = useState<JourneyId | null>(null)
+  const [avatarReady, setAvatarReady] = useState(false)
+  const [entranceDone, setEntranceDone] = useState(false)
+  const [queued, setQueued] = useState(false)
+  const pendingHear = useRef(false)
+  const speechRequest = useRef(0)
+  const choiceTimer = useRef(0)
   const heading = useRef<HTMLHeadingElement>(null)
+  const flight = useRef<HTMLDivElement>(null)
+  const avatarSettled = useCallback(() => setAvatarReady(true), [])
   useEffect(() => {
     heading.current?.focus()
   }, [])
   useEffect(() => {
-    if (phase !== "greeting") return
-    const timer = window.setTimeout(() => setPhase("choices"), 7800)
+    const duration = flight.current ? parseFloat(getComputedStyle(flight.current).animationDuration) * 1000 : 0
+    const timer = window.setTimeout(() => setEntranceDone(true), duration || 0)
     return () => clearTimeout(timer)
-  }, [phase])
+  }, [])
+  useEffect(() => {
+    if (avatarReady) return
+    // A slow/failed model must not prevent the learner from entering a journey.
+    const timer = window.setTimeout(avatarSettled, 10000)
+    return () => clearTimeout(timer)
+  }, [avatarReady, avatarSettled])
+  const speak = useCallback(async (voice: PipVoice, force = false) => {
+    clearTimeout(choiceTimer.current)
+    const current = ++speechRequest.current
+    setQueued(false)
+    setPhase((current) => current === "choices" ? "choices" : "greeting")
+    const duration = await (force ? audio.hear(voice) : audio.play(voice))
+    if (current !== speechRequest.current) return
+    choiceTimer.current = window.setTimeout(() => setPhase("choices"), duration ? duration * 1000 + 600 : 7800)
+  }, [audio.hear, audio.play])
+  useEffect(() => {
+    if ((phase === "loading" || (phase === "choices" && queued)) && avatarReady && entranceDone) {
+      void speak(audio.voice, pendingHear.current)
+      pendingHear.current = false
+    }
+  }, [phase, queued, avatarReady, entranceDone, audio.voice, speak])
+  useEffect(() => () => {
+    speechRequest.current++
+    clearTimeout(choiceTimer.current)
+  }, [])
   useEffect(() => {
     if (phase !== "leaving" || !selected) return
     const timer = window.setTimeout(() => onChoose(selected), 800)
     return () => clearTimeout(timer)
   }, [phase, selected, onChoose])
   const skip = () => {
+    speechRequest.current++
+    clearTimeout(choiceTimer.current)
+    pendingHear.current = false
+    setQueued(false)
     audio.stop()
     setPhase("choices")
     heading.current?.focus()
   }
   const choose = (id: JourneyId) => {
+    speechRequest.current++
+    clearTimeout(choiceTimer.current)
     audio.stop()
     setSelected(id)
     setPhase("leaving")
+  }
+  const hear = () => {
+    audio.prepare()
+    if (!avatarReady || !entranceDone) {
+      pendingHear.current = true
+      setQueued(true)
+    } else void speak(audio.voice, true)
   }
 
   return (
@@ -51,7 +98,7 @@ export default function PipWelcome({
               <i className="pip-online" /> PIP ONLINE
             </span>
             <h1 id="pip-welcome-title" ref={heading} tabIndex={-1}>
-              {phase === "greeting"
+              {phase === "loading" ? "Here comes Pip…" : phase === "greeting"
                 ? "Hey, you're in!"
                 : phase === "leaving"
                   ? "Let's go!"
@@ -61,7 +108,7 @@ export default function PipWelcome({
             <span className="hh-pips" aria-hidden="true">
               <i className="on" />
               <i className="on" />
-              <i className={phase !== "greeting" ? "on" : ""} />
+              <i className={phase === "choices" || phase === "leaving" ? "on" : ""} />
               <i />
             </span>
           </div>
@@ -77,13 +124,13 @@ export default function PipWelcome({
             <span className="pip-stage-label" aria-hidden="true">
               COMPANION / 01
             </span>
-            <div className="pip-flight">
+            <div className="pip-flight" ref={flight}>
               <Suspense
                 fallback={
-                  <span className="pip-loading">Pip is flying in…</span>
+                  <PipLoadingAvatar />
                 }
               >
-                <PipAvatar wave />
+                <PipAvatar wave={phase !== "loading"} onReady={avatarSettled} />
               </Suspense>
             </div>
             <span className="pip-stage-ground" aria-hidden="true" />
@@ -92,14 +139,14 @@ export default function PipWelcome({
         <div className="pip-dialogue" aria-live="polite">
           <span className="pip-speaker">PIP</span>
           <p>
-            {phase === "greeting"
+            {phase === "loading" ? "I'm floating in! Get ready to pick your adventure." : phase === "greeting"
               ? greeting
               : phase === "leaving"
                 ? "Good choice! I'll be in the corner if you need a hand."
                 : "Where shall we go? I'll be with you every step of the way."}
           </p>
         </div>
-        {phase !== "greeting" && (
+        {(phase === "choices" || phase === "leaving") && (
           <div className="journey-choices" aria-label="Choose a journey">
             {journeys.map((journey) => (
               <button
@@ -122,7 +169,7 @@ export default function PipWelcome({
         <div className="pip-welcome-controls">
           <button
             type="button"
-            onClick={audio.toggleMute}
+            onClick={() => { pendingHear.current = false; setQueued(false); audio.toggleMute() }}
             aria-pressed={audio.muted}
           >
             {audio.muted ? "Sound off" : "Sound on"}
@@ -135,35 +182,26 @@ export default function PipWelcome({
               onChange={(event) => {
                 const voice = event.target.value as PipVoice
                 audio.chooseVoice(voice)
-                if (phase === "greeting") audio.play(voice)
+                if (phase === "greeting") void speak(voice)
               }}
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
             </select>
           </label>
-          {phase === "greeting" ? (
+          <button type="button" className="pip-hear" disabled={phase === "leaving"} onClick={hear}>Hear Pip</button>
+          {phase === "greeting" || phase === "loading" ? (
             <button type="button" onClick={skip}>
               Skip greeting →
             </button>
-          ) : (
-            <button
-              type="button"
-              disabled={phase === "leaving"}
-              onClick={audio.hear}
-            >
-              Hear Pip
-            </button>
-          )}
+          ) : null}
         </div>
         {audio.audioError && (
           <p className="pip-audio-note" role="status">
-            {audio.audioError}{" "}
-            <button type="button" onClick={audio.hear}>
-              Hear Pip
-            </button>
+            {audio.audioError}
           </p>
         )}
+        {queued && <p className="pip-audio-note" role="status">I'll speak as soon as my entrance is ready.</p>}
         <span className="sr-only" role="status">
           {audio.playing ? "Pip is speaking" : ""}
         </span>
