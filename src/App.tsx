@@ -485,7 +485,7 @@ export default function App() {
   const requested = new URLSearchParams(window.location.search);
   const initialMission = journeys.find((item) => item.id === requested.get("mission"))?.id || "physics";
   const [journeyId, setJourneyId] = useState<JourneyId>(initialMission);
-  const [view, setViewState] = useState<View>(() => requested.get("view") === "join" ? "join" : requested.get("view") === "journey" ? "journey" : "dashboard");
+  const [view, setViewState] = useState<View>(() => requested.get("view") === "journey" ? "journey" : requested.get("view") === "hub" ? "dashboard" : "join");
   const [pipUnlocked, setPipUnlocked] = useState(view === "journey");
   const [context, setContext] = useState<HelpContext | null>(null);
   const [celebration, setCelebration] = useState<{ kind: "answer" | "complete"; serial: number } | null>(null);
@@ -500,7 +500,7 @@ export default function App() {
     url.searchParams.delete("mission");
     if (next === "join" || next === "welcome") url.searchParams.set("view", "join");
     else if (next === "case") { url.searchParams.set("view", "journey"); url.searchParams.set("mission", "biopharma"); }
-    else url.searchParams.delete("view");
+    else url.searchParams.set("view", "hub");
     window.history.replaceState(null, "", url);
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [audio.stop]);
