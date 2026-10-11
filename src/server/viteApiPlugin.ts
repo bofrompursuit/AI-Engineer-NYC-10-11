@@ -1,7 +1,7 @@
 import type { Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { runScan } from "./scanHandler";
-import { recordAnswer, fetchHistory } from "./db";
+import { parseScanId, recordAnswer, fetchHistory } from "./db";
 import pipSession from "../../api/pip-session.js";
 import pipChat from "../../api/pip-chat.js";
 
@@ -42,10 +42,11 @@ export function apiScanMiddleware(): Plugin {
         if (req.method !== "POST") return next();
         try {
           const { id, selectedIndex, isCorrect } = JSON.parse((await readBody(req)) || "{}");
-          if (typeof id !== "number" || typeof selectedIndex !== "number") {
+          const scanId = parseScanId(id);
+          if (scanId === null || typeof selectedIndex !== "number") {
             return sendJson(res, 400, { error: "Missing id or selectedIndex" });
           }
-          await recordAnswer(id, selectedIndex, Boolean(isCorrect));
+          await recordAnswer(scanId, selectedIndex, Boolean(isCorrect));
           sendJson(res, 200, { ok: true });
         } catch (e: any) {
           sendJson(res, 500, { error: String(e?.message ?? e) });

@@ -18,7 +18,7 @@ export default function ScanScreen({ goBack, audio, onPipContext }: { goBack: ()
   };
 
   return (
-    <main className="subpage analytics-page page-enter">
+    <main className="subpage analytics-page scan-page page-enter">
       <div className="subpage-top">
         <button className="btn btn-outline" type="button" onClick={goBack}>← MISSION HUB</button>
         <span className="case-live"><i /> GEMINI + NIMBLE + TIGER DATA</span>
