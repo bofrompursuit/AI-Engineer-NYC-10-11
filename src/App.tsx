@@ -133,16 +133,16 @@ const games = [
     progress: "42% complete",
   },
   {
-    id: "calculus",
+    id: "scan",
     number: "03",
-    kind: "calculus",
-    tag: "RATES & CHANGE",
-    title: "REACTOR RUN",
-    subtitle: "CALCULUS CHALLENGE",
-    description: "Use derivatives and integrals to bring a reactor back online.",
-    sponsor: "RAG by Snowflake Cortex",
-    sponsorDetail: "Adaptive knowledge",
-    progress: "3 challenges · +300 XP",
+    kind: "scan",
+    tag: "SCAN-TO-LEARN",
+    title: "SCAN & LEARN",
+    subtitle: "SNAP · LEARN · SAVE",
+    description: "Point your camera at anything real-world and Pip turns it into a quick challenge.",
+    sponsor: "Gemini + Nimble + Tiger Data",
+    sponsorDetail: "Vision · search · history",
+    progress: "New · any subject",
   },
   {
     id: "bingo",
@@ -184,6 +184,18 @@ function GameArt({ kind }: { kind: string }) {
       <div className="game-art bingo">
         <div className="bingo-head">{["T", "I", "N", "Y"].map((l) => <b key={l}>{l}</b>)}</div>
         <div className="bingo-grid">{Array.from({ length: 16 }, (_, i) => <i key={i} className={stamped.includes(i) ? "on" : ""} />)}</div>
+      </div>
+    );
+  }
+  if (kind === "scan") {
+    return (
+      <div className="game-art scan-art">
+        <div className="viewfinder">
+          <span className="vf tl" /><span className="vf tr" /><span className="vf bl" /><span className="vf br" />
+          <span className="vf-box">PLANT</span>
+          <span className="vf-line" />
+          <Icon name="radar" size={34} />
+        </div>
       </div>
     );
   }
@@ -243,7 +255,7 @@ function QrCode() {
   return <div className="qr" aria-label="QR code placeholder">{cells.map((cell) => <i key={cell} style={{ gridArea: `${Math.floor(cell / 9) + 1} / ${(cell % 9) + 1}` }} />)}</div>;
 }
 
-function Dashboard({ openCase, openAnalytics, openJoin, openJourney }: { openCase: () => void; openAnalytics: () => void; openJoin: () => void; openJourney: (id: JourneyId) => void }) {
+function Dashboard({ openCase, openAnalytics, openJoin, openJourney, openScan }: { openCase: () => void; openAnalytics: () => void; openJoin: () => void; openJourney: (id: JourneyId) => void; openScan: () => void }) {
   return (
     <main className="dashboard page-enter">
       <section className="hero-row">
@@ -258,7 +270,7 @@ function Dashboard({ openCase, openAnalytics, openJoin, openJourney }: { openCas
         </div>
       </section>
       <section className="games-grid">
-        {games.map((game) => <GameCard key={game.id} game={game} onStart={game.id === "bingo" ? () => window.location.assign("/bingo/index.html") : () => openJourney(game.id === "case" ? "biopharma" : game.id === "mars" ? "physics" : "calculus")} />)}
+        {games.map((game) => <GameCard key={game.id} game={game} onStart={game.id === "bingo" ? () => window.location.assign("/bingo/index.html") : game.id === "scan" ? openScan : () => openJourney(game.id === "case" ? "biopharma" : "physics")} />)}
       </section>
       <section className="lower-grid">
         <article className="panel feed-panel">
@@ -510,7 +522,7 @@ export default function App() {
       {view !== "welcome" && <Header view={view} setView={setView} />}
       <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
         {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} />}
-        {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} />}
+        {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} />}
         {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
         {view === "join" && <JoinScreen onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
