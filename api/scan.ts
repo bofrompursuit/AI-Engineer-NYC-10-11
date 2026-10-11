@@ -1,6 +1,6 @@
 // Vercel serverless function (Node runtime) — production equivalent of the
 // local-dev middleware registered in vite.config.ts. Same shared handler.
-import { runScan } from "../src/server/scanHandler";
+import { runScan } from "../src/server/scanHandler.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {

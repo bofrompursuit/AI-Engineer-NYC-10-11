@@ -1,4 +1,4 @@
-import { fetchHistory } from "../src/server/db";
+import { fetchHistory } from "../src/server/db.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {
