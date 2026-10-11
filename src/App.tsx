@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
-type View = "dashboard" | "case" | "analytics";
+type View = "dashboard" | "case" | "analytics" | "join";
 
 const Icon = ({
   name,
@@ -75,12 +76,13 @@ function Header({ view, setView }: { view: View; setView: (view: View) => void }
     <header className="app-header">
       <button className="brand" onClick={() => setView("dashboard")} type="button">
         <span className="brand-mark"><span /></span>
-        <span>PATHFINDR <b>AI</b></span>
+        <span>UNFOLD</span>
       </button>
       <nav className="view-nav" aria-label="Primary navigation">
         <button className={view === "dashboard" ? "active" : ""} onClick={() => setView("dashboard")} type="button">Mission hub</button>
         <button className={view === "case" ? "active" : ""} onClick={() => setView("case")} type="button">Case file</button>
         <button className={view === "analytics" ? "active" : ""} onClick={() => setView("analytics")} type="button">Analytics</button>
+        <button className={view === "join" ? "active" : ""} onClick={() => setView("join")} type="button">Join</button>
       </nav>
       <div className="header-actions">
         <Stat icon="coin" value="12,450" label="XP" />
@@ -216,7 +218,7 @@ function QrCode() {
   return <div className="qr" aria-label="QR code placeholder">{cells.map((cell) => <i key={cell} style={{ gridArea: `${Math.floor(cell / 9) + 1} / ${(cell % 9) + 1}` }} />)}</div>;
 }
 
-function Dashboard({ openCase, openAnalytics }: { openCase: () => void; openAnalytics: () => void }) {
+function Dashboard({ openCase, openAnalytics, openJoin }: { openCase: () => void; openAnalytics: () => void; openJoin: () => void }) {
   return (
     <main className="dashboard page-enter">
       <section className="hero-row">
@@ -261,7 +263,7 @@ function Dashboard({ openCase, openAnalytics }: { openCase: () => void; openAnal
         </article>
         <article className="panel demo-panel">
           <div className="demo-label">WIN THE HACKATHON DEMO</div>
-          <div className="qr-row"><QrCode /><span><small>SCAN TO UNLOCK</small><strong>AI ENGINEER NYC</strong><p>Sponsor demo · Email required</p></span></div>
+          <div className="qr-row" onClick={openJoin} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && openJoin()}><QrCode /><span><small>SCAN TO UNLOCK</small><strong>AI ENGINEER NYC</strong><p>Sponsor demo · Email required</p></span></div>
           <div className="monitor-head"><span><Icon name="radar" size={16} /> AGENT MONITOR</span><small>SENTRY SDK TRACE</small></div>
           <div className="monitor-list">
             <span><i className="ok" /><b>Gemini Call Trace</b><em>1.2s</em></span>
@@ -354,14 +356,110 @@ function AnalyticsScreen({ goBack }: { goBack: () => void }) {
   );
 }
 
+
+const joinUrl = () => `${window.location.origin}${window.location.pathname}?view=join`;
+
+function JoinScreen({ onJoined }: { onJoined: () => void }) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [player, setPlayer] = useState<string | null>(null);
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const value = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setError("ENTER A VALID EMAIL TO SPAWN");
+      return;
+    }
+    setError("");
+    setPlayer(value);
+  };
+
+  return (
+    <main className="join page-enter">
+      <div className="hud-frame" aria-hidden="true"><i /><i /><i /><i /></div>
+      <div className="hud-top">
+        <span><i className="live-dot" /> LOBBY // AI ENGINEER NYC</span>
+        <span>SECTOR 10-11 · SIGNAL 98%</span>
+      </div>
+
+      <section className="join-grid">
+        <div className="join-scan">
+          <span className="join-kicker">STEP 01 / SCAN</span>
+          <h1>Scan to <em>drop in.</em></h1>
+          <p>Point your phone camera at the code to join the hackathon demo on your device.</p>
+          <div className="scan-target">
+            <span className="corner tl" /><span className="corner tr" /><span className="corner bl" /><span className="corner br" />
+            <span className="scan-line" />
+            <QRCodeSVG value={joinUrl()} size={232} bgColor="#f7fff9" fgColor="#071018" level="M" marginSize={2} />
+          </div>
+          <code className="join-url">{joinUrl()}</code>
+        </div>
+
+        <div className="join-divider"><span>OR</span></div>
+
+        <form className="join-panel" onSubmit={submit} noValidate>
+          <span className="join-kicker">STEP 02 / IDENTIFY</span>
+          <h2>Sign in with email</h2>
+          <p>We'll save your XP, streak and case files to this address.</p>
+          {player ? (
+            <div className="join-success" role="status">
+              <span className="crosshair" aria-hidden="true" />
+              <small>PLAYER SPAWNED</small>
+              <strong>{player}</strong>
+              <button className="btn btn-primary" type="button" onClick={onJoined}>ENTER MISSION HUB <Icon name="arrow" size={16} /></button>
+            </div>
+          ) : (
+            <>
+              <label htmlFor="join-email">EMAIL ADDRESS</label>
+              <input
+                id="join-email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "join-error" : undefined}
+              />
+              {error && <span id="join-error" className="join-error">{error}</span>}
+              <button className="btn btn-primary join-submit" type="submit">PRESS START <Icon name="arrow" size={16} /></button>
+              <span className="join-fine"><Icon name="lock" size={14} /> No password. Email only.</span>
+            </>
+          )}
+          <div className="hud-bars" aria-hidden="true">
+            <span><small>HP</small><i><b style={{ width: "100%" }} /></i></span>
+            <span><small>XP</small><i><b style={{ width: player ? "35%" : "0%" }} /></i></span>
+          </div>
+        </form>
+      </section>
+
+      <div className="hud-bottom" aria-hidden="true">
+        <span>[ SCAN ] JOIN</span><span>[ ENTER ] START</span><span>V1.0 · LIVE</span>
+      </div>
+    </main>
+  );
+}
+
 export default function App() {
-  const [view, setView] = useState<View>("dashboard");
+  const [view, setViewState] = useState<View>(() =>
+    new URLSearchParams(window.location.search).get("view") === "join" ? "join" : "dashboard",
+  );
+  const setView = (next: View) => {
+    setViewState(next);
+    const url = new URL(window.location.href);
+    if (next === "join") url.searchParams.set("view", "join");
+    else url.searchParams.delete("view");
+    window.history.replaceState(null, "", url);
+  };
   return (
     <div className="app-shell">
       <Header view={view} setView={setView} />
-      {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} />}
+      {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} />}
       {view === "case" && <CaseScreen goBack={() => setView("dashboard")} openAnalytics={() => setView("analytics")} />}
       {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
+      {view === "join" && <JoinScreen onJoined={() => setView("dashboard")} />}
     </div>
   );
 }
