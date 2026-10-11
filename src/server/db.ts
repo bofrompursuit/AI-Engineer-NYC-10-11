@@ -4,6 +4,12 @@ import type { Article, Detection } from "./scanHandler";
 
 let pool: Pool | null = null;
 
+/** Scan ids are BIGSERIAL, which pg returns as strings; accept either form. */
+export function parseScanId(value: unknown): number | null {
+  const id = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+  return typeof id === "number" && Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 function getPool(): Pool {
   if (!pool) {
     pool = new Pool({

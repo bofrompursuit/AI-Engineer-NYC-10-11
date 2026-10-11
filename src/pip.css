@@ -46,6 +46,7 @@
 .pip-welcome-controls select { color: var(--space); border: 0; background: transparent; font: inherit; }
 .pip-audio-note { font-size: var(--pip-small); line-height: 1.5; margin: var(--pip-sm) 0; }.pip-audio-note button { background: transparent; border: 0; color: inherit; text-decoration: underline; }
 .learning-journey { max-width: 1280px; margin: auto; padding-bottom: calc(var(--pip-dock) + var(--pip-xl) * 2); }
+.scan-page { padding-bottom: calc(var(--pip-dock) + var(--pip-xl) * 2); }
 .journey-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--pip-lg); margin: var(--pip-xl) 0; }
 .journey-heading h1 { font-size: clamp(32px, 5vw, 48px); margin: var(--pip-sm) 0; line-height: 1.1; }
 .journey-heading p { color: var(--muted); line-height: var(--pip-leading); font-size: var(--pip-body); max-width: 640px; margin: 0; }
