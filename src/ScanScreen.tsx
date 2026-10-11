@@ -1,10 +1,11 @@
 import { useState } from "react";
 import ScanUploadView from "./ScanUploadView";
 import GalleryScreen from "./GalleryScreen";
+import type { PipAudio } from "./usePipVoice";
 
 type SubView = "upload" | "gallery";
 
-export default function ScanScreen({ goBack }: { goBack: () => void }) {
+export default function ScanScreen({ goBack, audio }: { goBack: () => void; audio: PipAudio }) {
   const [subView, setSubView] = useState<SubView>("upload");
   const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
 
@@ -28,7 +29,7 @@ export default function ScanScreen({ goBack }: { goBack: () => void }) {
           <p>Point your camera at anything real-world curious, answer PIP's question, and every scan lands in your gallery.</p>
         </div>
         <div className="range-control">
-          <button className={subView === "upload" ? "active" : ""} type="button" onClick={() => setSubView("upload")}>
+          <button className={subView === "upload" ? "active" : ""} type="button" onClick={() => { audio.prepare("scan"); setSubView("upload"); }}>
             UPLOAD
           </button>
           <button className={subView === "gallery" ? "active" : ""} type="button" onClick={goToGallery}>
@@ -37,7 +38,7 @@ export default function ScanScreen({ goBack }: { goBack: () => void }) {
         </div>
       </section>
 
-      {subView === "upload" && <ScanUploadView onViewGallery={goToGallery} />}
+      {subView === "upload" && <ScanUploadView audio={audio} onViewGallery={goToGallery} />}
       {subView === "gallery" && <GalleryScreen refreshKey={galleryRefreshKey} />}
     </main>
   );

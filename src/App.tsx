@@ -485,7 +485,7 @@ export default function App() {
   const requested = new URLSearchParams(window.location.search);
   const initialMission = journeys.find((item) => item.id === requested.get("mission"))?.id || "physics";
   const [journeyId, setJourneyId] = useState<JourneyId>(initialMission);
-  const [view, setViewState] = useState<View>(() => requested.get("view") === "journey" ? "journey" : requested.get("view") === "hub" ? "dashboard" : "join");
+  const [view, setViewState] = useState<View>(() => requested.get("view") === "journey" ? "journey" : requested.get("view") === "scan" ? "scan" : requested.get("view") === "hub" ? "dashboard" : "join");
   const [pipUnlocked, setPipUnlocked] = useState(view === "journey");
   const [context, setContext] = useState<HelpContext | null>(null);
   const [celebration, setCelebration] = useState<{ kind: "answer" | "complete"; serial: number } | null>(null);
@@ -493,17 +493,19 @@ export default function App() {
   const audio = usePipVoice();
   const setView = useCallback((next: View) => {
     audio.stop();
+    if (next === "scan") audio.prepare("scan");
     setCelebration(null);
     setReaction(null);
     setViewState(next);
     const url = new URL(window.location.href);
     url.searchParams.delete("mission");
     if (next === "join" || next === "welcome") url.searchParams.set("view", "join");
+    else if (next === "scan") url.searchParams.set("view", "scan");
     else if (next === "case") { url.searchParams.set("view", "journey"); url.searchParams.set("mission", "biopharma"); }
     else url.searchParams.set("view", "hub");
     window.history.replaceState(null, "", url);
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, [audio.stop]);
+  }, [audio.stop, audio.prepare]);
   const openJourney = useCallback((id: JourneyId) => {
     setJourneyId(id); setPipUnlocked(true); setView("journey");
     const url = new URL(window.location.href);
@@ -539,7 +541,7 @@ export default function App() {
         {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
         {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
-        {view === "scan" && <ScanScreen goBack={() => setView("dashboard")} />}
+        {view === "scan" && <ScanScreen audio={audio} goBack={() => setView("dashboard")} />}
       </Suspense>
       {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && view !== "scan" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} reaction={reaction} /></Suspense>}
       {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}
