@@ -92,8 +92,6 @@ function Header({ view, setView }: { view: View; setView: (view: View) => void }
         <button className={view === "dashboard" ? "active" : ""} onClick={() => setView("dashboard")} type="button">Mission hub</button>
         <button className={view === "case" ? "active" : ""} onClick={() => setView("case")} type="button">Case file</button>
         <button className={view === "analytics" ? "active" : ""} onClick={() => setView("analytics")} type="button">Analytics</button>
-        <button className={view === "join" ? "active" : ""} onClick={() => setView("join")} type="button">Join</button>
-        <button className={view === "scan" ? "active" : ""} onClick={() => setView("scan")} type="button">Scan</button>
       </nav>
       <div className="header-actions">
         <Stat icon="coin" value="12,450" label="XP" />
@@ -534,7 +532,7 @@ export default function App() {
   const activeJourney = view === "case" ? "biopharma" : journeyId;
   return (
     <div className="app-shell">
-      {view !== "welcome" && <Header view={view} setView={setView} />}
+      {view !== "welcome" && view !== "join" && <Header view={view} setView={setView} />}
       <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
         {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} onScan={() => setView("scan")} />}
         {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} />}
