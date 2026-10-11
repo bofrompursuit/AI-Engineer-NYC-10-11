@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import ConceptVisual from "./ConceptVisual"
 import { getJourney, type JourneyId, type Question } from "./journeys"
 import type { PipReactionKind } from "./pipBehavior"
 
@@ -23,12 +24,17 @@ export default function JourneyPlayer({
   const [selected, setSelected] = useState<number | null>(null)
   const [result, setResult] = useState<"correct" | "retry" | null>(null)
   const [complete, setComplete] = useState(false)
+  const [learned, setLearned] = useState(false)
   const title = useRef<HTMLHeadingElement>(null)
   const question = journey.questions[step]
   const solved = result === "correct"
+  const hasVisual = question.id === "force" || question.id === "speed" || question.id === "energy"
   useEffect(() => {
     title.current?.focus()
   }, [step, complete])
+  useEffect(() => {
+    setLearned(!hasVisual)
+  }, [step, hasVisual])
   useEffect(() => {
     onContext(complete ? null : { journeyId: id, question, solved })
     return () => onContext(null)
@@ -121,7 +127,7 @@ export default function JourneyPlayer({
               </span>
             </div>
           </header>
-          <section className="journey-workspace">
+          <section className={`journey-workspace ${learned ? "" : "learning"}`}>
             <div className="journey-scene panel">
               <div className="journey-scene-top">
                 <span>MISSION BRIEF</span>
@@ -132,15 +138,26 @@ export default function JourneyPlayer({
               </span>
               <h2>{question.title}</h2>
               <p>{question.scene}</p>
+              {hasVisual && <ConceptVisual questionId={question.id} />}
               <div className="journey-formula">
                 <small>FIELD NOTE</small>
                 <strong>{question.formula}</strong>
               </div>
-              <span className="journey-hint-label">
-                Need a hint? Ask Pip in the corner.
-              </span>
+              {learned ? (
+                <span className="journey-hint-label">
+                  Need a hint? Ask Pip in the corner.
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-primary journey-submit"
+                  onClick={() => setLearned(true)}
+                >
+                  Got it — let's try it →
+                </button>
+              )}
             </div>
-            <div className="journey-question panel">
+            {learned && <div className="journey-question panel">
               <span className="eyebrow">CHALLENGE 0{step + 1}</span>
               <h2 id="journey-title" ref={title} tabIndex={-1}>
                 {question.question}
@@ -208,7 +225,7 @@ export default function JourneyPlayer({
                   CHECK ANSWER →
                 </button>
               )}
-            </div>
+            </div>}
           </section>
         </>
       )}
