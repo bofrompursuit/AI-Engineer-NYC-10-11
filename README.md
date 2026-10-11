@@ -2,6 +2,9 @@
 
 React/Vite hackathon prototype with a Game Boy join screen and Pip learning companion.
 
+> The **Scan** tab (photo → Gemini vision quiz → Nimble articles → Tiger Data gallery) has its
+> own integration notes in [`SCAN.md`](SCAN.md).
+
 ## Pip flow
 
 1. Open `?view=join`, enter a valid email, and press A. This is a demo email check, not authentication or account creation.

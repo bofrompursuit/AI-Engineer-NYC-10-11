@@ -169,6 +169,51 @@ button { font: inherit; }
   .ab { height: 92px; }.ab button { width: 44px; height: 44px; }
 }
 
+/* Scan & learn — PIP's scan-to-quiz page. Additive only; nothing above this is touched. */
+.scan-stage { display: flex; flex-direction: column; gap: 12px; }
+.scan-placeholder { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; border: 1px dashed var(--line); background: rgba(13,26,36,.5); padding: 32px 26px; min-height: 320px; justify-content: center; }
+.scan-placeholder.pip-loading { align-items: center; text-align: center; }
+.scan-placeholder p { margin: 0; color: #a4b1b9; font-size: 12px; line-height: 1.7; max-width: 420px; }
+.pip-avatar-sm { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--mint); background: rgba(57,231,189,.1); border: 1px solid var(--mint); flex-shrink: 0; }
+.pip-scan-btn { min-height: 44px; padding: 0 20px; }
+.pip-loading { align-items: center; text-align: center; padding: 28px 16px; }
+.pip-spinner { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--mint); animation: pip-spin .8s linear infinite; }
+@keyframes pip-spin { to { transform: rotate(360deg); } }
+.pip-error { color: var(--danger); }
+.pip-subject-tag { align-self: flex-start; text-transform: uppercase; font: 700 9px "DM Mono"; letter-spacing: 1.2px; color: var(--space); background: var(--mint); padding: 3px 8px; }
+.pip-concept { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.4px; }
+.pip-description { margin: 0; color: #a4b1b9; font-size: 11px; line-height: 1.6; }
+.pip-wrong { border-color: var(--danger) !important; color: var(--ink) !important; background: rgba(255,82,103,.08) !important; }
+.pip-wrong > span { color: #fff !important; background: var(--danger) !important; border-color: var(--danger) !important; }
+.pip-feedback { font-size: 11px; padding: 10px 12px; border-left: 2px solid var(--mint); background: rgba(57,231,189,.06); color: var(--mint-soft); margin-top: 14px; }
+.pip-feedback-wrong { border-left-color: var(--danger); background: rgba(255,82,103,.06); color: #ffc2cb; }
+.pip-annotated-canvas { width: 100%; height: auto; display: block; border: 1px solid var(--line); background: var(--space); }
+.scan-done-actions { display: flex; gap: 10px; margin-top: 16px; }
+.scan-done-actions .pip-scan-btn { flex: 1; }
+.pip-explanation { background: #101f29; border-left: 2px solid var(--mint); padding: 11px 13px; }
+.pip-explanation small { color: var(--mint); font: 8px "DM Mono"; letter-spacing: .6px; }
+.pip-explanation p { margin: 5px 0 0; color: #c8d3d8; font-size: 11px; line-height: 1.55; }
+.pip-articles { display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.pip-articles > small { color: var(--muted); font: 8px "DM Mono"; letter-spacing: 1px; }
+.pip-article { display: flex; flex-direction: column; gap: 3px; background: #101f29; border: 1px solid #223844; padding: 9px 11px; text-decoration: none; }
+.pip-article:hover { border-color: var(--mint); }
+.pip-article strong { color: var(--mint-soft); font-size: 11px; line-height: 1.4; }
+.pip-article span { color: var(--muted); font-size: 10px; line-height: 1.5; }
+
+/* Gallery view — additive only, reuses existing tokens/classes (.subpage, .kpi-grid, .pip-subject-tag). */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin-top: 18px; }
+.gallery-card { background: var(--panel); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; }
+.gallery-card img { width: 100%; height: 150px; object-fit: cover; display: block; border-bottom: 1px solid var(--line); }
+.gallery-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.gallery-card-body strong { font-size: 13px; }
+.gallery-card-body p { margin: 0; color: #93a4ad; font-size: 10px; line-height: 1.5; max-height: 45px; overflow: hidden; }
+.gallery-card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.gallery-card-foot > span:first-child { color: var(--muted); font: 9px "DM Mono"; }
+.gallery-badge { font: 700 8px "DM Mono"; letter-spacing: .6px; padding: 3px 7px; text-transform: uppercase; }
+.gallery-badge-pending { color: var(--muted); background: rgba(129,147,159,.12); }
+.gallery-badge-correct { color: var(--mint); background: rgba(57,231,189,.12); }
+.gallery-badge-wrong { color: var(--danger); background: rgba(255,82,103,.12); }
+
 /* Game Boy theme layer */
 .brand, .hero-title, .game-title, .panel-heading strong, .chart-meta > strong, h1, h2 { font-family: "Pixelify Sans", "Space Mono", monospace; letter-spacing: 0 !important; }
 .panel { background: var(--panel); border: 3px solid var(--line); border-radius: 10px; box-shadow: inset 0 0 0 1px #0b0f16, 0 6px 0 #0b0f16; }

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import ScanScreen from "./ScanScreen";
 import { journeys, type JourneyId } from "./journeys";
 import usePipVoice from "./usePipVoice";
 import PipWelcome from "./PipWelcome";
@@ -8,7 +9,7 @@ const PipCompanion = lazy(() => import("./PipCompanion"));
 const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
 const Celebration = lazy(() => import("./Celebration"));
 
-type View = "dashboard" | "case" | "analytics" | "join" | "welcome" | "journey";
+type View = "dashboard" | "case" | "analytics" | "join" | "welcome" | "journey" | "scan";
 
 const Icon = ({
   name,
@@ -90,6 +91,7 @@ function Header({ view, setView }: { view: View; setView: (view: View) => void }
         <button className={view === "case" ? "active" : ""} onClick={() => setView("case")} type="button">Case file</button>
         <button className={view === "analytics" ? "active" : ""} onClick={() => setView("analytics")} type="button">Analytics</button>
         <button className={view === "join" ? "active" : ""} onClick={() => setView("join")} type="button">Join</button>
+        <button className={view === "scan" ? "active" : ""} onClick={() => setView("scan")} type="button">Scan</button>
       </nav>
       <div className="header-actions">
         <Stat icon="coin" value="12,450" label="XP" />
@@ -500,8 +502,9 @@ export default function App() {
         {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onCelebrate={celebrate} />}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
         {view === "join" && <JoinScreen onJoined={() => { setView("welcome"); setPipUnlocked(true); audio.prepare(); }} />}
+        {view === "scan" && <ScanScreen goBack={() => setView("dashboard")} />}
       </Suspense>
-      {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} celebrating={Boolean(celebration)} /></Suspense>}
+      {(pipUnlocked || view === "case") && view !== "welcome" && view !== "join" && view !== "scan" && <Suspense fallback={null}><PipCompanion context={context} audio={audio} celebrating={Boolean(celebration)} /></Suspense>}
       {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}
     </div>
   );
