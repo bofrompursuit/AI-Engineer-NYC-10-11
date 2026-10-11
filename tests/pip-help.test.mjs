@@ -1,6 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import handler from "../api/pip-help.js"
+import { mockPipBudget } from "./pip-budget-mock.mjs"
 
 const valid = {
   journeyId: "physics",
@@ -41,6 +42,7 @@ async function call(body = valid, options = {}) {
   return response
 }
 function configure(t) {
+  mockPipBudget(t)
   const oldKey = process.env.GEMINI_API_KEY
   const oldEnabled = process.env.PIP_HELP_ENABLED
   process.env.GEMINI_API_KEY = "test-only-not-a-real-key"

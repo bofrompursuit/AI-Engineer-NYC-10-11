@@ -19,6 +19,7 @@ export default function PipConversation({ context, pageContext, audio, reaction,
   const [connecting, setConnecting] = useState(false)
   const [asking, setAsking] = useState(false)
   const [pendingVoice, setPendingVoice] = useState(false)
+  const [voiceMaxSeconds, setVoiceMaxSeconds] = useState(120)
   const [noisyRoom, setNoisyRoom] = useState(() => { try { return localStorage.getItem("pip-noisy-room") === "true" } catch { return false } })
   const [holdingToSpeak, setHoldingToSpeak] = useState(false)
   const [hover, setHover] = useState(false)
@@ -51,6 +52,8 @@ export default function PipConversation({ context, pageContext, audio, reaction,
     onDisconnect: () => { setConnecting(false); setHoldingToSpeak(false); audio.endLive(); lastContext.current = "" },
     onError: () => { setError("Pip couldn't connect. Try again in a moment."); setConnecting(false); setPendingVoice(false); setHoldingToSpeak(false); audio.endLive() },
   })
+  const endVoiceRef = useRef(() => {})
+  endVoiceRef.current = () => { audio.endLive(); conversation.endSession() }
 
   useEffect(() => { if (open) input.current?.focus() }, [open])
   useEffect(() => { if (log.current) log.current.scrollTop = log.current.scrollHeight }, [messages, connecting])
@@ -59,6 +62,32 @@ export default function PipConversation({ context, pageContext, audio, reaction,
     conversation.sendContextualUpdate(`Current page context: ${pageContext}. Use it for the learner's next question; do not respond to this update.`)
     lastContext.current = pageContext
   }, [pageContext, conversation.status, conversation.sendContextualUpdate])
+  useEffect(() => {
+    if (conversation.status !== "connected") return
+    let finished = false
+    let hiddenTimer = 0
+    const endForLimit = (reason: string) => {
+      if (finished) return
+      finished = true
+      setError(reason)
+      setHoldingToSpeak(false)
+      endVoiceRef.current()
+    }
+    const durationTimer = window.setTimeout(() => endForLimit("Voice chat ended to save credits. You can start another if today's limit allows."), voiceMaxSeconds * 1000)
+    const onVisibility = () => {
+      clearTimeout(hiddenTimer)
+      if (document.hidden) hiddenTimer = window.setTimeout(() => endForLimit("Voice chat ended while this tab was away to save credits."), 10000)
+    }
+    const onPageHide = () => endForLimit("Voice chat ended when the page closed.")
+    document.addEventListener("visibilitychange", onVisibility)
+    window.addEventListener("pagehide", onPageHide)
+    return () => {
+      clearTimeout(durationTimer)
+      clearTimeout(hiddenTimer)
+      document.removeEventListener("visibilitychange", onVisibility)
+      window.removeEventListener("pagehide", onPageHide)
+    }
+  }, [conversation.status, voiceMaxSeconds])
   const beginVoice = async () => {
     setConnecting(true)
     setError("")
@@ -66,10 +95,11 @@ export default function PipConversation({ context, pageContext, audio, reaction,
     try {
       const response = await fetch("/api/pip-session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "voice" }) })
       const data = await response.json()
-      if (!response.ok) throw new Error(response.status === 429 ? "Please wait before starting another conversation." : "Pip's live conversation is unavailable. Check the agent setup.")
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error.slice(0, 160) : "Pip's live conversation is unavailable. Check the agent setup.")
       const history = messagesRef.current.slice(-12).map((item) => `${item.who === "you" ? "Learner" : "Pip"}: ${item.text}`).join("\n").slice(-3000)
       const prompt = `${rules}\nCurrent page context: ${pageRef.current}\nEarlier conversation:\n${history || "None"}`
       if (typeof data.conversationToken !== "string") throw new Error("Pip's voice connection is unavailable.")
+      setVoiceMaxSeconds(Number.isSafeInteger(data.maxSeconds) && data.maxSeconds >= 60 && data.maxSeconds <= 300 ? data.maxSeconds : 120)
       conversation.startSession({ conversationToken: data.conversationToken, textOnly: false, inputDeviceId: inputDeviceId.current, overrides: { agent: { prompt: { prompt } } } })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Pip couldn't connect.")
@@ -116,7 +146,7 @@ export default function PipConversation({ context, pageContext, audio, reaction,
     try {
       const response = await fetch("/api/pip-chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: text, context: pageRef.current, history }) })
       const data = await response.json()
-      if (!response.ok || typeof data.answer !== "string") throw new Error(response.status === 429 ? "Please wait before asking again." : response.status === 503 ? "Pip's text chat is unavailable. Check the Gemini setup." : "Pip couldn't answer. Try again.")
+      if (!response.ok || typeof data.answer !== "string") throw new Error(typeof data.error === "string" ? data.error.slice(0, 160) : "Pip couldn't answer. Try again.")
       setMessages((current) => [...current, { key: `reply:${crypto.randomUUID()}`, who: "pip" as const, text: data.answer }].slice(-24))
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Pip couldn't answer.")

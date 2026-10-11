@@ -1,6 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import handler from "../api/pip-session.js"
+import { mockPipBudget } from "./pip-budget-mock.mjs"
 
 let address = 0
 async function call(body, headers = {}, method = "POST") {
@@ -15,10 +16,11 @@ async function call(body, headers = {}, method = "POST") {
   return response
 }
 function configure(t) {
+  mockPipBudget(t)
   const previous = [process.env.ELEVENLABS_API_KEY, process.env.ELEVENLABS_AGENT_ID, process.env.PIP_AGENT_ENABLED]
   process.env.ELEVENLABS_API_KEY = "test-only-secret"
   process.env.ELEVENLABS_AGENT_ID = "agent_test123"
-  delete process.env.PIP_AGENT_ENABLED
+  process.env.PIP_AGENT_ENABLED = "true"
   t.after(() => {
     for (const [index, name] of ["ELEVENLABS_API_KEY", "ELEVENLABS_AGENT_ID", "PIP_AGENT_ENABLED"].entries()) {
       if (previous[index] === undefined) delete process.env[name]
@@ -35,6 +37,13 @@ test("rejects invalid requests before calling ElevenLabs", async (t) => {
   assert.equal((await call({ mode: "voice" }, {}, "GET")).statusCode, 405)
   assert.equal(fetch.mock.callCount(), 0)
 })
+test("keeps live voice off until explicitly enabled", async (t) => {
+  configure(t)
+  delete process.env.PIP_AGENT_ENABLED
+  const fetch = t.mock.method(globalThis, "fetch", () => { throw new Error("must not call provider") })
+  assert.equal((await call({ mode: "voice" })).statusCode, 503)
+  assert.equal(fetch.mock.callCount(), 0)
+})
 test("returns only the scoped voice session credential", async (t) => {
   configure(t)
   const fetch = t.mock.method(globalThis, "fetch", async (url, options) => {
@@ -42,7 +51,7 @@ test("returns only the scoped voice session credential", async (t) => {
     if (url.includes("/token?")) return new Response(JSON.stringify({ token: "voice-token", conversation_id: "conv_test" }))
     throw new Error("wrong endpoint")
   })
-  assert.deepEqual((await call({ mode: "voice" })).body, { conversationToken: "voice-token" })
+  assert.deepEqual((await call({ mode: "voice" })).body, { conversationToken: "voice-token", maxSeconds: 120 })
   assert.equal(fetch.mock.callCount(), 1)
 })
 test("missing configuration and provider failure stay unavailable", async (t) => {

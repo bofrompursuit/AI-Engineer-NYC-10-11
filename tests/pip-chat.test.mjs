@@ -1,6 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import handler from "../api/pip-chat.js"
+import { mockPipBudget } from "./pip-budget-mock.mjs"
 
 let address = 0
 async function call(body, headers = {}, method = "POST") {
@@ -14,11 +15,19 @@ async function call(body, headers = {}, method = "POST") {
   await handler({ method, headers: { host: "unfold.test", "x-forwarded-for": `pip-chat-test-${++address}`, ...headers }, body }, response)
   return response
 }
-function configure(t) {
+function configure(t, allowed = true) {
+  mockPipBudget(t, allowed)
   const previous = process.env.GEMINI_API_KEY
   process.env.GEMINI_API_KEY = "test-only-secret"
   t.after(() => { if (previous === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = previous })
 }
+test("stops at the shared daily limit before calling Gemini", async (t) => {
+  configure(t, false)
+  const fetch = t.mock.method(globalThis, "fetch", () => { throw new Error("must not call provider") })
+  const response = await call({ question: "Help", context: "Welcome" })
+  assert.equal(response.statusCode, 429)
+  assert.equal(fetch.mock.callCount(), 0)
+})
 
 test("rejects invalid text and cross-site requests before Gemini", async (t) => {
   configure(t)

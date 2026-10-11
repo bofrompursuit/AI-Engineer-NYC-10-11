@@ -18,11 +18,14 @@ Pip receives the current page and challenge summary; Scan photos and join emails
 are not sent to the conversation. Bingo stays in its existing page inside an
 iframe so the parent Pip session remains mounted.
 
-To enable text chat, set `GEMINI_API_KEY` in this checkout's ignored `.env.local`.
+To enable text chat, set `GEMINI_API_KEY` and the `TIGER_*` database values in
+this checkout's ignored `.env.local`. The shared database enforces one daily
+budget across server instances. Without it, Pip refuses provider requests.
 To enable voice, create one private ElevenLabs Agent, choose a Gemini model
 for its LLM, allow prompt overrides, and set
 `ELEVENLABS_AGENT_ID` and `ELEVENLABS_API_KEY` in this checkout's ignored
-`.env.local`. Restart the dev server after setting them. The server's
+`.env.local`. Set `PIP_AGENT_ENABLED=true` after setting the provider limits
+below. Restart the dev server after changing values. The server's
 `/api/pip-chat` route calls Gemini for text; `/api/pip-session` issues a
 short-lived WebRTC conversation token for voice. Long-lived keys stay on the
 server. The existing recorded greetings still play without these values.
@@ -41,10 +44,25 @@ or let the learner speak first; the recorded intro already welcomes them.
 Test with actual background voices and speakers before treating this as
 reliable noise handling. The live agent has not yet been configured or tested.
 
-The join email is only a demo check, not authentication. Both routes have
-in-memory, per-instance request limits. Before a public launch with paid
-providers, add real user authentication, a shared rate limit, and spending
-limits. Live ElevenLabs and Gemini conversations are not yet verified.
+The join email is only a demo check, not authentication. Pip has a shared UTC
+daily cap of 25 Gemini text attempts across `/api/pip-chat` and `/api/pip-help`,
+and 3 ElevenLabs voice token attempts. Set `PIP_TEXT_DAILY_LIMIT` and
+`PIP_VOICE_DAILY_LIMIT` to change these caps, or `0` to disable that provider.
+Attempts count even if a provider fails, so the cap stays conservative. Voice
+also ends after `PIP_VOICE_MAX_SECONDS` (120 by default), or after 10 seconds
+in a hidden tab. This timer runs in the browser and is not a billing guarantee.
+The existing per-instance minute guards still limit bursts. For public use,
+add real authentication and a deployment-level abuse limit.
+
+Set an independent spending limit in [Google AI Studio billing](https://ai.google.dev/gemini-api/docs/billing/)
+for the Gemini project. Its monthly spend cap has billing latency, so it can
+overshoot. In ElevenLabs, set the agent's [daily call limit](https://elevenlabs.io/docs/eleven-agents/guides/call-queueing)
+to 3 and its [maximum conversation duration](https://elevenlabs.io/docs/eleven-agents/customization/conversation-flow)
+to 120 seconds. These provider controls protect against bypassing the browser
+timer. Voice usage is billed by connected duration and can include LLM costs;
+see [ElevenAgents pricing](https://elevenlabs.io/docs/help-center/product/eleven-agents/how-much-does-eleven-agents-cost).
+The app limits count requests, not dollars. Live ElevenLabs and Gemini
+conversations are not yet verified.
 
 > The **Scan** tab (photo → Gemini vision quiz → Nimble articles → Tiger Data gallery) has its
 > own integration notes in [`SCAN.md`](SCAN.md).
@@ -73,10 +91,10 @@ Use Node 22+ (verified with Node 24) and pnpm:
    cp .env.example .env.local
    ```
 
-2. Open `.env.local` and fill in `GEMINI_API_KEY` to enable image quizzes and
-   Pip text chat. Add a
-   `NIMBLE_API_KEY` for related articles and the `TIGER_*` connection values for scan
-   storage and the gallery. The template explains the optional settings. Pip's
+2. Open `.env.local` and fill in `GEMINI_API_KEY` for image quizzes and Pip
+   text chat. Add `NIMBLE_API_KEY` for related articles and the `TIGER_*`
+   connection values for scan storage, the gallery, and Pip's shared daily cap.
+   The template explains the optional settings. Pip's
    bundled greeting clips work without an ElevenLabs key.
 3. Install dependencies and start the development server with the commands below.
    Restart it after changing environment values. `.env.local` is ignored by Git;
@@ -100,7 +118,7 @@ Set `GEMINI_API_KEY` on the server, never as a `VITE_` variable. Optional `GEMIN
 
 The client sends the learner's question, journey/question identifiers, and whether the challenge was solved. It does not send the join email. The server loads the authored context, asks for concise hints, and calls Gemini with a 12-second timeout. It returns no invented fallback answers. Provider failures leave the authored hints available.
 
-The demo limits input to 600 characters and provider output to 400 tokens, with a per-instance eight-request/minute guard. This is not a distributed abuse limit; configure provider spending/quotas and a deployment-level limit before public use with a paid key. The curriculum and grading are client-visible demo data, not secure assessments. Sign-in, account persistence, live dashboard metrics, and live Gemini answers have not been verified.
+The demo limits input to 600 characters and provider output to 400 tokens, with a per-instance eight-request/minute guard. This route shares Pip's 25-attempt UTC daily text cap. The curriculum and grading are client-visible demo data, not secure assessments. Sign-in, account persistence, live dashboard metrics, and live Gemini answers have not been verified.
 
 ## Acceptance checks
 
