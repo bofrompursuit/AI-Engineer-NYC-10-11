@@ -4,7 +4,7 @@ import { greeting, type PipAudio, type PipVoice } from "./usePipVoice"
 import { PipLoadingAvatar } from "./PipPoster"
 const PipAvatar = lazy(() => import("./PipAvatar"))
 
-type Choice = JourneyId | "scan"
+type Choice = JourneyId | "scan" | "bingo"
 const choices: { id: Choice; letter: string; name: string; description: string; accent: string }[] = [
   getJourney("physics"),
   {
@@ -14,7 +14,13 @@ const choices: { id: Choice; letter: string; name: string; description: string; 
     description: "Point your camera at anything real-world and I'll turn it into a quick challenge.",
     accent: "purple",
   },
-  { ...getJourney("biopharma"), letter: "C" },
+  {
+    id: "bingo",
+    letter: "C",
+    name: "TINY Math Bingo",
+    description: "Solve 16 algebra, exponent and geometry problems. Stamp four in a row to win.",
+    accent: "green",
+  },
 ]
 
 export default function PipWelcome({
@@ -74,7 +80,7 @@ export default function PipWelcome({
   }, [])
   useEffect(() => {
     if (phase !== "leaving" || !selected) return
-    const timer = window.setTimeout(() => (selected === "scan" ? onScan() : onChoose(selected)), 800)
+    const timer = window.setTimeout(() => (selected === "scan" ? onScan() : selected === "bingo" ? window.location.assign("/bingo/index.html") : onChoose(selected)), 800)
     return () => clearTimeout(timer)
   }, [phase, selected, onChoose, onScan])
   const skip = () => {

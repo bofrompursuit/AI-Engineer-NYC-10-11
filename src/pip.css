@@ -34,7 +34,7 @@
 .pip-speaker { color: var(--mint); font-size: var(--pip-small); font-weight: 700; letter-spacing: 2px; }
 .pip-dialogue p { font-size: var(--pip-body); line-height: var(--pip-leading); margin: var(--pip-sm) 0 0; }
 .journey-choices { display: grid; gap: var(--pip-sm); margin-top: var(--pip-md); animation: pip-choices .35s ease-out both; }
-.accent-blue { --journey-accent: var(--blue); }.accent-purple { --journey-accent: var(--orange); }.accent-gold { --journey-accent: var(--mint); }
+.accent-blue { --journey-accent: var(--blue); }.accent-purple { --journey-accent: var(--orange); }.accent-gold { --journey-accent: var(--mint); }.accent-green { --journey-accent: #22c55e; }
 .journey-choice { display: grid; grid-template-columns: 34px 1fr auto; gap: var(--pip-md); align-items: center; text-align: left; padding: var(--pip-md); border: var(--pip-border); border-radius: var(--pip-radius); color: var(--ink); background: var(--panel); }
 .journey-choice:hover { border-color: var(--journey-accent); background: var(--space-2); }.journey-choice:disabled { opacity: .65; }
 .choice-key { display: grid; place-items: center; aspect-ratio: 1; border: 2px solid var(--journey-accent); border-radius: 50%; color: var(--journey-accent); font-weight: 700; }
