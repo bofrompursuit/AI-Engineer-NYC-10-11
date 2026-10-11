@@ -1,46 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import AnnotatedImage from "./AnnotatedImage";
-
-interface Detection {
-  label: string;
-  box_2d: [number, number, number, number];
-}
-
-interface Article {
-  title: string;
-  url: string;
-  snippet: string;
-}
-
-interface ScanResult {
-  id?: number;
-  subject: "physics" | "calculus" | "biopharma" | "general";
-  concept: string;
-  description: string;
-  detections: Detection[];
-  question: string;
-  choices: string[];
-  correctIndex: number;
-  explanation: string;
-  pipLine: string;
-  articles: Article[];
-}
+import { prepareScanImage, requestScan, type ScanResult } from "./scanUpload";
 
 type Status = "idle" | "loading" | "result" | "error";
-
-function fileToBase64(file: File): Promise<{ data: string; mimeType: string; dataUrl: string }> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const [, base64] = dataUrl.split(",", 2);
-      resolve({ data: base64, mimeType: file.type || "image/jpeg", dataUrl });
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 function celebrate() {
   const rocket = confetti.shapeFromText({ text: "🚀", scalar: 2 });
@@ -66,29 +29,42 @@ export default function ScanUploadView({ onViewGallery }: { onViewGallery: () =>
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [loadingText, setLoadingText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const request = useRef<AbortController | null>(null);
+  useEffect(() => () => request.current?.abort(), []);
 
   const handleFile = async (file: File) => {
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    let timeout = 0;
+    setResult(null);
+    setSelected(null);
+    setImageDataUrl(null);
+    setErrorMsg("");
+    setLoadingText("Preparing your photo…");
     setStatus("loading");
     try {
-      const { data, mimeType, dataUrl } = await fileToBase64(file);
+      const { data, mimeType, dataUrl } = await prepareScanImage(file);
+      if (controller.signal.aborted) return;
       setImageDataUrl(dataUrl);
-      const resp = await fetch("/api/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: data, mimeType }),
-      });
-      if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        throw new Error(body.error || `Request failed (${resp.status})`);
-      }
-      const json = (await resp.json()) as ScanResult;
+      setLoadingText("Pip is looking closely… This can take a little while.");
+      timeout = window.setTimeout(() => controller.abort("timeout"), 90_000);
+      const json = await requestScan(data, mimeType, controller.signal);
+      if (controller.signal.aborted) return;
       setResult(json);
-      setSelected(null);
       setStatus("result");
-    } catch (e: any) {
-      setErrorMsg(String(e?.message ?? e));
+    } catch (error) {
+      if (controller.signal.aborted && controller.signal.reason !== "timeout") return;
+      setErrorMsg(controller.signal.reason === "timeout"
+        ? "This scan took too long. Please try again with a clear, closer photo."
+        : error instanceof TypeError ? "The connection to Pip was interrupted. Check your internet connection and try again."
+        : error instanceof Error ? error.message : "Pip couldn't scan this photo. Please try again.");
       setStatus("error");
+    } finally {
+      clearTimeout(timeout);
+      if (request.current === controller) request.current = null;
     }
   };
 
@@ -122,13 +98,13 @@ export default function ScanUploadView({ onViewGallery }: { onViewGallery: () =>
         {status === "loading" && (
           <div className="scan-placeholder pip-loading">
             <span className="pip-spinner" aria-hidden="true" />
-            <p>Looking closely...</p>
+            <p role="status">{loadingText}</p>
           </div>
         )}
 
         {status === "error" && (
           <div className="scan-placeholder">
-            <p className="pip-error">Hmm, I couldn't quite make that out: {errorMsg}</p>
+            <p className="pip-error" role="alert">{errorMsg}</p>
             <button className="btn btn-outline pip-scan-btn" type="button" onClick={() => fileInputRef.current?.click()}>
               Try another photo
             </button>

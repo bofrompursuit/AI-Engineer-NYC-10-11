@@ -22,6 +22,24 @@ If you're an agent picking this up mid-hackathon: read this before touching
    always revealed, and a second write updates that row with what they picked.
 7. The **Gallery** sub-view queries Tiger Data and shows every past scan with its outcome.
 
+## Photo upload preparation
+
+- `src/scanUpload.ts` prepares photos in the browser before sending them to `/api/scan`.
+  It caps the longest side at 1600 pixels and encodes a JPEG at quality 0.82, resizing
+  further if needed to keep the image under 1.5 MB (about 2 MB after base64 encoding).
+- This keeps camera photos and large screenshots below Vercel's 4.5 MB request body
+  limit. For example, an 8.82 MB PNG would otherwise become an 11.76 MB JSON request
+  and fail with HTTP 413 before the scan handler runs.
+- The preview uses the same prepared image sent to Gemini, so annotations use the
+  same dimensions and orientation. The original file on the user's device is unchanged.
+- Files over 25 MB and images the browser cannot decode show a retry message. Use
+  JPG, PNG, or WebP if a phone's HEIC image cannot open in the browser.
+- Upload requests have a 90-second browser timeout. Timeout, connection, size, and
+  malformed result errors show a retry action. Cancelling the browser request does
+  not cancel work already running in a server function.
+- Run `pnpm test` for request/error regression tests. Verify image preparation in a
+  real browser; the tests do not simulate Canvas image encoding.
+
 ## Architecture
 
 ```
