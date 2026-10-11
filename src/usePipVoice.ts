@@ -34,7 +34,21 @@ export default function usePipVoice() {
   const [playing, setPlaying] = useState(false)
   const [audioError, setAudioError] = useState("")
   const source = useRef<AudioBufferSourceNode | null>(null)
+  const meter = useRef<{ node: AnalyserNode; samples: Float32Array<ArrayBuffer> } | null>(null)
   const request = useRef(0)
+  const disconnectMeter = useCallback(() => {
+    meter.current?.node.disconnect()
+    meter.current = null
+  }, [])
+  const getLevel = useCallback(() => {
+    if (!meter.current) return 0
+    const { node, samples } = meter.current
+    node.getFloatTimeDomainData(samples)
+    let energy = 0
+    for (const sample of samples) energy += sample * sample
+    const rms = Math.sqrt(energy / samples.length)
+    return Math.min(1, Math.max(0, (rms - 0.008) * 5))
+  }, [])
   const stop = useCallback(() => {
     request.current++
     if (source.current) {
@@ -43,8 +57,9 @@ export default function usePipVoice() {
       source.current.disconnect()
       source.current = null
     }
+    disconnectMeter()
     setPlaying(false)
-  }, [])
+  }, [disconnectMeter])
   const preload = useCallback(() => {
     try { void Promise.allSettled([loadClip("male"), loadClip("female")]) }
     catch { /* Hear Pip can retry when audio is unavailable. */ }
@@ -74,12 +89,17 @@ export default function usePipVoice() {
       if (engine.state !== "running") throw new Error("Audio is blocked")
       const clip = engine.createBufferSource()
       clip.buffer = buffer
-      clip.connect(engine.destination)
+      const analyser = engine.createAnalyser()
+      analyser.fftSize = 256
+      clip.connect(analyser)
+      analyser.connect(engine.destination)
+      meter.current = { node: analyser, samples: new Float32Array(analyser.fftSize) }
       source.current = clip
       clip.onended = () => {
         if (source.current === clip) {
           clip.disconnect()
           source.current = null
+          disconnectMeter()
           setPlaying(false)
         }
       }
@@ -88,6 +108,9 @@ export default function usePipVoice() {
       return buffer.duration
     } catch {
       if (current === request.current) {
+        source.current?.disconnect()
+        source.current = null
+        disconnectMeter()
         setPlaying(false)
         setAudioError("Pip's greeting couldn't play. Tap Hear Pip to try again.")
       }
@@ -95,7 +118,7 @@ export default function usePipVoice() {
     } finally {
       clearTimeout(timeout)
     }
-  }, [voice, muted, stop])
+  }, [voice, muted, stop, disconnectMeter])
   const chooseVoice = (next: PipVoice) => { stop(); setVoice(next); save("pip-voice", next) }
   const toggleMute = () => {
     const next = !muted
@@ -116,7 +139,8 @@ export default function usePipVoice() {
       source.current.disconnect()
       source.current = null
     }
-  }, [])
-  return { voice, muted, playing, audioError, preload, prepare, play, hear, stop, chooseVoice, toggleMute }
+    disconnectMeter()
+  }, [disconnectMeter])
+  return { voice, muted, playing, audioError, getLevel, preload, prepare, play, hear, stop, chooseVoice, toggleMute }
 }
 export type PipAudio = ReturnType<typeof usePipVoice>

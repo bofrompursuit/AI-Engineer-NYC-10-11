@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { getJourney, type JourneyId, type Question } from "./journeys"
+import type { PipReactionKind } from "./pipBehavior"
 
 export type HelpContext = {
   journeyId: JourneyId
@@ -10,12 +11,12 @@ export default function JourneyPlayer({
   id,
   onBack,
   onContext,
-  onCelebrate,
+  onReaction,
 }: {
   id: JourneyId
   onBack: () => void
   onContext: (context: HelpContext | null) => void
-  onCelebrate: (kind: "answer" | "complete") => void
+  onReaction: (kind: PipReactionKind, questionId: string) => void
 }) {
   const journey = getJourney(id)
   const [step, setStep] = useState(0)
@@ -37,14 +38,17 @@ export default function JourneyPlayer({
     if (selected === null || solved) return
     if (selected === question.correct) {
       setResult("correct")
-      onCelebrate("answer")
-    } else setResult("retry")
+      onReaction("correct", question.id)
+    } else {
+      setResult("retry")
+      onReaction("retry", question.id)
+    }
   }
   const next = () => {
     if (!solved) return
     if (step === journey.questions.length - 1) {
       setComplete(true)
-      onCelebrate("complete")
+      onReaction("complete", question.id)
     } else {
       setStep(step + 1)
       setSelected(null)
