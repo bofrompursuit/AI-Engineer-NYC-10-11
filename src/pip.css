@@ -94,7 +94,7 @@
   .learning-journey { padding-right: calc(var(--pip-dock) + var(--pip-xl) + var(--pip-md)); }
 }
 @media (max-width: 760px) {
-  .learning-journey { height: calc(100dvh - 82px - var(--pip-dock) - var(--pip-lg)); overflow-y: auto; overscroll-behavior: contain; padding-bottom: var(--pip-lg); }
+  .learning-journey { padding-bottom: calc(var(--pip-dock) + var(--pip-lg)); }
   .journey-heading { flex-direction: column; align-items: flex-start; }.journey-workspace { grid-template-columns: 1fr; }.journey-scene, .journey-question { padding: var(--pip-lg); }.journey-symbol { font-size: 64px; margin: var(--pip-md) 0; }.journey-complete { padding: var(--pip-lg); }.journey-complete h1 { font-size: 36px; }
 }
 @media (max-width: 420px) {
