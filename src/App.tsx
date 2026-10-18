@@ -563,7 +563,7 @@ export default function App() {
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
         {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); audio.prepare(); }} />}
         {view === "scan" && <ScanScreen audio={audio} goBack={() => setView("dashboard")} onPeachesContext={setScanContext} />}
-        {view === "bingo" && <main className="peaches-bingo-page"><iframe ref={bingoFrame} title="TINY Math Bingo" src="/bingo/index.html" /></main>}
+        {view === "bingo" && <ProGate id="bingo" onBack={() => setView("dashboard")} onFree={() => openJourney("physics")}><main className="peaches-bingo-page"><iframe ref={bingoFrame} title="TINY Math Bingo" src="/bingo/index.html" /></main></ProGate>}
       </Suspense>
       <Suspense fallback={null}><PeachesCompanion context={view === "journey" || view === "case" ? context : null} pageContext={pageContext} audio={audio} reaction={reaction} compact={view === "welcome" || view === "join"} /></Suspense>
       {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}

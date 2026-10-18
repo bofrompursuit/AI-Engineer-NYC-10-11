@@ -4,13 +4,14 @@ import type { Package, Purchases } from "@revenuecat/purchases-js"
 // Public Web Billing key (rcb_…). Safe to ship to the browser, unlike server keys.
 const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY as string | undefined
 export const PRO_ENTITLEMENT = "pro"
-export const FREE_JOURNEYS: readonly JourneyId[] = ["physics"]
+export type Mission = JourneyId | "bingo"
+export const FREE_MISSIONS: readonly Mission[] = ["physics"]
 const USER_KEY = "unfold.rc-user"
 
 // Without a key the paywall stays off so local demos keep every journey open.
 export const paywallEnabled = Boolean(apiKey)
-export const isPremium = (id: JourneyId) =>
-  paywallEnabled && !FREE_JOURNEYS.includes(id)
+export const isPremium = (id: Mission) =>
+  paywallEnabled && !FREE_MISSIONS.includes(id)
 
 let instance: Promise<Purchases> | null = null
 

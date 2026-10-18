@@ -1,12 +1,20 @@
 import { useEffect, useState, type ReactNode } from "react"
 import type { Package } from "@revenuecat/purchases-js"
 import PeachesPoster from "./PeachesPoster"
-import { getJourney, type JourneyId } from "./journeys"
-import { buyPro, hasPro, isPremium, proPackages } from "./revenuecat"
+import { getJourney } from "./journeys"
+import { buyPro, hasPro, isPremium, proPackages, type Mission } from "./revenuecat"
 
 type Status = "checking" | "locked" | "unlocked" | "error"
 
-export default function ProGate({ id, onBack, onFree, children }: { id: JourneyId; onBack: () => void; onFree: () => void; children: ReactNode }) {
+const bingo = {
+  letter: "04",
+  title: "TINY Math Bingo",
+  description: "Solve 16 algebra, exponent and geometry problems. Stamp four in a row to win.",
+  accent: "purple",
+}
+const missionInfo = (id: Mission) => (id === "bingo" ? bingo : getJourney(id))
+
+export default function ProGate({ id, onBack, onFree, children }: { id: Mission; onBack: () => void; onFree: () => void; children: ReactNode }) {
   const premium = isPremium(id)
   const [status, setStatus] = useState<Status>(premium ? "checking" : "unlocked")
   const [packages, setPackages] = useState<Package[]>([])
@@ -31,7 +39,7 @@ export default function ProGate({ id, onBack, onFree, children }: { id: JourneyI
 
   if (status === "unlocked") return <>{children}</>
 
-  const journey = getJourney(id)
+  const journey = missionInfo(id)
   const buy = async (rcPackage: Package) => {
     setBuying(rcPackage.identifier)
     setMessage("")
@@ -48,7 +56,7 @@ export default function ProGate({ id, onBack, onFree, children }: { id: JourneyI
     <main className={`subpage learning-journey accent-${journey.accent}`}>
       <div className="subpage-top">
         <button className="btn btn-outline" type="button" onClick={onBack}>← MISSION HUB</button>
-        <span className="case-live"><i /> JOURNEY {journey.letter}</span>
+        <span className="case-live"><i /> {id === "bingo" ? "MISSION" : "JOURNEY"} {journey.letter}</span>
         <span className="case-id">UNFOLD PRO</span>
       </div>
       <section className="journey-complete panel pro-gate" aria-labelledby="pro-title" aria-busy={status === "checking"}>
