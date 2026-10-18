@@ -1,4 +1,4 @@
-# Unfold
+# Curious Cats
 
 React/Vite hackathon prototype with a Game Boy join screen and Peaches learning companion.
 
@@ -112,7 +112,7 @@ Vite defaults to port 8443. It serves `/api/peaches-chat` and `/api/peaches-sess
 locally. Built-in hints and explanations work without provider keys. The older `/api/peaches-help` Vercel route
 remains in the repository but is no longer used by the Peaches panel.
 
-## Unfold Pro (RevenueCat Web Billing)
+## Curious Cats Pro (RevenueCat Web Billing)
 
 Physics is free. Calculus, the Biopharma case (Forensic Biochem) and TINY Math Bingo (Algebra Arcade) open only with the RevenueCat `pro` entitlement, sold through the current offering's packages with Web Billing (`@revenuecat/purchases-js`). Set `VITE_REVENUECAT_API_KEY` to the project's public Web Billing key (`rcb_…`); with no key the paywall is off and every journey stays open. Learners get an anonymous RevenueCat ID saved in local storage, so the demo join email is never sent to RevenueCat. The SDK loads only when a premium journey opens. If RevenueCat can't be reached, the journey shows an error and Physics stays playable.
 

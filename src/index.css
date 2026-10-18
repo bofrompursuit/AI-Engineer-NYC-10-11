@@ -174,7 +174,7 @@ button { font: inherit; }
 .dpad .left { left: 0; top: 28px; border-radius: 5px 0 0 5px; }.dpad .right { right: 0; top: 28px; border-radius: 0 5px 5px 0; }
 .dpad .mid { left: 28px; top: 28px; box-shadow: none; }
 .hh-label { display: grid; justify-items: center; gap: 3px; text-align: center; }
-.hh-label strong { font: 700 20px "Pixelify Sans"; color: #2b3242; }
+.hh-label strong { font: 700 18px "Space Mono", monospace; color: #2b3242; }
 .hh-label small { font: 700 9px "Space Mono"; letter-spacing: 1.5px; color: #4a5263; }
 .hh-stripe { width: 64px; height: 6px; margin-top: 6px; border-radius: 3px; background: #e5243b; }
 .ab { position: relative; height: 104px; }
@@ -264,7 +264,7 @@ button { font: inherit; }
 .gallery-badge-wrong { color: var(--danger); background: rgba(255,82,103,.12); }
 
 /* Game Boy theme layer */
-.brand, .hero-title, .game-title, .panel-heading strong, .chart-meta > strong, h1, h2 { font-family: "Pixelify Sans", "Space Mono", monospace; letter-spacing: 0 !important; }
+.hero-title, .game-title, .panel-heading strong, .chart-meta > strong, h1, h2 { font-family: "Pixelify Sans", "Space Mono", monospace; letter-spacing: 0 !important; }
 .panel { background: var(--panel); border: 3px solid var(--line); border-radius: 10px; box-shadow: inset 0 0 0 1px #0b0f16, 0 6px 0 #0b0f16; }
 .btn { border-radius: 6px; }
 .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 4px 0 #1f3f9e; }
@@ -305,3 +305,5 @@ button { font: inherit; }
   .view-nav::-webkit-scrollbar { display: none; }
   .view-nav button { flex: 0 0 auto; }
 }
+/* Pixelify's bold C closes into an O, so the Curious Cats wordmark uses Space Mono. */
+.brand { font-family: "Space Mono", monospace; letter-spacing: 0; }

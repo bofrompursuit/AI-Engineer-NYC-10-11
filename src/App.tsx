@@ -87,7 +87,7 @@ function Header({ view, setView }: { view: View; setView: (view: View) => void }
     <header className="app-header">
       <button className="brand" onClick={() => setView("dashboard")} type="button">
         <span className="brand-mark"><span /></span>
-        <span>UNFOLD</span>
+        <span>CURIOUS CATS</span>
       </button>
       <nav className="view-nav" aria-label="Primary navigation">
         <button className={view === "dashboard" ? "active" : ""} onClick={() => setView("dashboard")} type="button">Mission hub</button>
@@ -459,7 +459,7 @@ function JoinScreen({ onJoined, muted, toggleMute }: { onJoined: () => void; mut
         <div className="hh-controls">
           <div className="dpad" aria-hidden="true"><i className="up" /><i className="left" /><i className="mid" /><i className="right" /><i className="down" /></div>
           <div className="hh-label">
-            <strong>UNFOLD</strong>
+            <strong>CURIOUS CATS</strong>
             <small>AI ENGINEER NYC</small>
             <i className="hh-stripe" />
           </div>

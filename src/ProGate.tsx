@@ -57,17 +57,17 @@ export default function ProGate({ id, onBack, onFree, children }: { id: Mission;
       <div className="subpage-top">
         <button className="btn btn-outline" type="button" onClick={onBack}>← MISSION HUB</button>
         <span className="case-live"><i /> {id === "bingo" ? "MISSION" : "JOURNEY"} {journey.letter}</span>
-        <span className="case-id">UNFOLD PRO</span>
+        <span className="case-id">CURIOUS CATS PRO</span>
       </div>
       <section className="journey-complete panel pro-gate" aria-labelledby="pro-title" aria-busy={status === "checking"}>
         <span className="pro-gate-peaches"><PeachesPoster /></span>
-        <span className="eyebrow">UNFOLD PRO JOURNEY</span>
+        <span className="eyebrow">CURIOUS CATS PRO</span>
         <h1 id="pro-title">{journey.title}</h1>
         {status === "checking" && <p role="status">Peaches is checking your pass…</p>}
         {status === "error" && <p role="alert">Peaches couldn't reach the store. Physics is still free while we sort it out.</p>}
         {status === "locked" && (
           <>
-            <p>{journey.description} Unlock every premium journey with Unfold Pro.</p>
+            <p>{journey.description} Unlock every premium journey with Curious Cats Pro.</p>
             {packages.length ? (
               <div className="pro-gate-plans">
                 {packages.map((rcPackage) => (

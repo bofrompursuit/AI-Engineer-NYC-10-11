@@ -1,7 +1,7 @@
 # Scan & Learn — sponsor integration notes
 
 This document covers **only the Scan page** (`Header → Scan` nav tab) — the one part of this
-Unfold codebase with real backend integrations. Everything else in the app (Dashboard, Case,
+Curious Cats codebase with real backend integrations. Everything else in the app (Dashboard, Case,
 Analytics, Join) is static mock UI/content and out of scope here.
 
 If you're an agent picking this up mid-hackathon: read this before touching
