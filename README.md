@@ -76,8 +76,8 @@ conversations are not yet verified.
 
 The supplied GLBs are in `public/models`. `public/images/peaches-loading.png` is a transparent render of the neutral GLB using the live camera and lighting. It stays visible if WebGL or model loading fails. The two short greeting clips are in `public/audio`, generated with these ElevenLabs voices:
 
-- Male: `s6pb93K3LygWF3wDe6zf`
-- Female: `AdWNY9CsbvFfDZr1rOOe`
+- Male: Liam (`TX3LPaxmHKxFdv7VOQHJ`)
+- Female: Jessica (`cgSgspJ2msm6clMCkdW9`)
 
 Greeting: “Hey, I'm Peaches! Ready to learn something new? Pick an adventure. I'll be right here if you need a hand. Let's go!” No runtime ElevenLabs key is needed for these clips. Generated free-form answers currently use text, not synthesized speech.
 
