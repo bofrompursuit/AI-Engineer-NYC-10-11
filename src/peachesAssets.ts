@@ -23,7 +23,9 @@ export function preloadPeachesModels() {
   return assets
 }
 
-const peach = new THREE.MeshStandardMaterial({ color: 0xff7f50, roughness: 0.7, metalness: 0 })
+const peach = new THREE.MeshStandardMaterial({ color: 0xffb3a7, roughness: 0.7, metalness: 0 })
+// Peaches' orange fur replaces the robot's dark shell.
+const orange = 0xd4480a
 // Peaches' chest emblem: a cat face outline and smile, in emblem units (1 = emblem width).
 const emblemOutline = [
   [-0.36, 0.48], [-0.16, 0.29], [0, 0.27], [0.16, 0.29], [0.36, 0.48], [0.45, 0.12], [0.42, -0.14],
@@ -44,7 +46,12 @@ function addCatFeatures(model: THREE.Object3D) {
     const mark = model.getObjectByName(name)
     if (mark) mark.visible = false
   }
-  const charcoal = body.material as THREE.Material
+  const shell = body.material as THREE.MeshStandardMaterial
+  const fur = shell.clone()
+  fur.color.setHex(orange)
+  model.traverse((part) => {
+    if (part instanceof THREE.Mesh && part.material === shell) part.material = fur
+  })
   const white = face.material as THREE.Material
   const ink = mouth.material as THREE.Material
   const cat = new THREE.Group()
@@ -74,7 +81,7 @@ function addCatFeatures(model: THREE.Object3D) {
   }
 
   for (const side of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.48, 32), charcoal)
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.48, 32), fur)
     ear.scale.z = 0.5
     ear.position.set(side * 0.42, 2.18, -0.02)
     ear.rotation.z = -side * 0.32
@@ -99,7 +106,7 @@ function addCatFeatures(model: THREE.Object3D) {
   tube(emblem(emblemSmile), 0.017, white)
 
   const tail = [[0.3, 0.52, -0.32], [0.7, 0.4, -0.36], [1.0, 0.44, -0.3], [1.13, 0.57, -0.24], [1.12, 0.72, -0.18]]
-  tube(tail.map(([x, y, z]) => new THREE.Vector3(x, y, z)), 0.065, charcoal)
+  tube(tail.map(([x, y, z]) => new THREE.Vector3(x, y, z)), 0.065, fur)
 }
 
 // Shared by the live avatar and its matching still render.
