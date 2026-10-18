@@ -9,6 +9,7 @@ import { playArcadeSound } from "./arcadeAudio";
 import { pipReactionDuration, type PipReaction, type PipReactionKind } from "./pipBehavior";
 const PipCompanion = lazy(() => import("./PipConversation"));
 const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
+const ProGate = lazy(() => import("./ProGate"));
 const Celebration = lazy(() => import("./Celebration"));
 
 type View = "dashboard" | "case" | "analytics" | "join" | "welcome" | "journey" | "scan" | "bingo";
@@ -558,7 +559,7 @@ export default function App() {
       <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
         {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} onScan={() => setView("scan")} onBingo={() => setView("bingo")} />}
         {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} openBingo={() => setView("bingo")} />}
-        {(view === "journey" || view === "case") && <JourneyPlayer key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} />}
+        {(view === "journey" || view === "case") && <ProGate key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onFree={() => openJourney("physics")}><JourneyPlayer id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} /></ProGate>}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
         {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); audio.prepare(); }} />}
         {view === "scan" && <ScanScreen audio={audio} goBack={() => setView("dashboard")} onPipContext={setScanContext} />}

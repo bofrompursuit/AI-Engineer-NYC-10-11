@@ -172,3 +172,6 @@
   .pip-poster img { animation: none; }.pip-poster, .pip-avatar canvas { transition: none; }
   .pip-flight, .journey-choices, .page-enter { animation: none !important; transform: none !important; }.celebration { display: none; }.pip-welcome button, .learning-journey button { transition: none; }
 }
+.pro-gate-pip { position: relative; display: block; width: 140px; height: 140px; }
+.pro-gate-plans { display: grid; gap: var(--pip-sm); width: 100%; max-width: 360px; }.pro-gate-plans .btn { min-height: 48px; padding: var(--pip-md); }.pro-gate-plans .btn:disabled { opacity: .6; transform: none; }
+.pro-gate-error { color: var(--mint-soft); }

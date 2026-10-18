@@ -112,6 +112,10 @@ Vite defaults to port 8443. It serves `/api/pip-chat` and `/api/pip-session`
 locally. Built-in hints and explanations work without provider keys. The older `/api/pip-help` Vercel route
 remains in the repository but is no longer used by the Pip panel.
 
+## Unfold Pro (RevenueCat Web Billing)
+
+Physics is free. Calculus and the Biopharma case open only with the RevenueCat `pro` entitlement, sold through the current offering's packages with Web Billing (`@revenuecat/purchases-js`). Set `VITE_REVENUECAT_API_KEY` to the project's public Web Billing key (`rcb_…`); with no key the paywall is off and every journey stays open. Learners get an anonymous RevenueCat ID saved in local storage, so the demo join email is never sent to RevenueCat. The SDK loads only when a premium journey opens. If RevenueCat can't be reached, the journey shows an error and Physics stays playable.
+
 ## Older lesson Q&A route
 
 Set `GEMINI_API_KEY` on the server, never as a `VITE_` variable. Optional `GEMINI_MODEL` overrides the default `gemini-3.5-flash-lite`. Set `PIP_HELP_ENABLED=false` to disable provider requests. The route uses Google's [generateContent API](https://ai.google.dev/api/generate-content) and the [current model list](https://ai.google.dev/gemini-api/docs/models).
