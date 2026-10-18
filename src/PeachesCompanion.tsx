@@ -7,23 +7,23 @@ import {
   type FormEvent,
 } from "react"
 import type { HelpContext } from "./JourneyPlayer"
-import type { PipAudio, PipVoice } from "./usePipVoice"
-import { PipLoadingAvatar } from "./PipPoster"
-import type { PipMood, PipReaction } from "./pipBehavior"
-const PipAvatar = lazy(() => import("./PipAvatar"))
+import type { PeachesAudio, PeachesVoice } from "./usePeachesVoice"
+import { PeachesLoadingAvatar } from "./PeachesPoster"
+import type { PeachesMood, PeachesReaction } from "./peachesBehavior"
+const PeachesAvatar = lazy(() => import("./PeachesAvatar"))
 type Message = {
-  who: "you" | "pip"
+  who: "you" | "peaches"
   text: string
 }
 
-export default function PipCompanion({
+export default function PeachesCompanion({
   context,
   audio,
   reaction,
 }: {
   context: HelpContext | null
-  audio: PipAudio
-  reaction: PipReaction | null
+  audio: PeachesAudio
+  reaction: PeachesReaction | null
 }) {
   const [open, setOpen] = useState(false)
   const [question, setQuestion] = useState("")
@@ -36,8 +36,8 @@ export default function PipCompanion({
   const request = useRef<AbortController | null>(null)
   const questionId = context?.question.id
   const answerReaction = reaction && (reaction.kind === "complete" || reaction.questionId === questionId) ? reaction.kind : null
-  const mood: PipMood = answerReaction || (audio.playing ? "speaking" : busy ? "thinking" : "idle")
-  const label = answerReaction === "retry" ? "You've got this!" : answerReaction ? "You did it!" : busy ? "Thinking…" : audio.playing ? "I'm Pip!" : "Ask Pip"
+  const mood: PeachesMood = answerReaction || (audio.playing ? "speaking" : busy ? "thinking" : "idle")
+  const label = answerReaction === "retry" ? "You've got this!" : answerReaction ? "You did it!" : busy ? "Thinking…" : audio.playing ? "I'm Peaches!" : "Ask Peaches"
   useEffect(() => {
     request.current?.abort()
     request.current = null
@@ -63,7 +63,7 @@ export default function PipCompanion({
     add([
       { who: "you", text: explain ? "Explain the idea." : "Give me a hint." },
       {
-        who: "pip",
+        who: "peaches",
         text: explain
           ? context.question.concept
           : context.solved
@@ -83,7 +83,7 @@ export default function PipCompanion({
     request.current = controller
     const timeout = window.setTimeout(() => controller.abort("timeout"), 15000)
     try {
-      const response = await fetch("/api/pip-help", {
+      const response = await fetch("/api/peaches-help", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,19 +100,19 @@ export default function PipCompanion({
       if (!response.ok || typeof body.answer !== "string") {
         add([
           {
-            who: "pip",
+            who: "peaches",
             text:
               response.status === 429
                 ? "Let's take a short breather. You can still use the hint and explanation buttons."
                 : "Live questions are unavailable right now. You can still ask me for a hint or an explanation below.",
           },
         ])
-      } else add([{ who: "pip", text: body.answer }])
+      } else add([{ who: "peaches", text: body.answer }])
     } catch {
       if (!controller.signal.aborted || controller.signal.reason === "timeout")
         add([
           {
-            who: "pip",
+            who: "peaches",
             text: "I couldn't reach live Q&A. Try the hint or explanation buttons below—we can keep going.",
           },
         ])
@@ -125,48 +125,48 @@ export default function PipCompanion({
     }
   }
   return (
-    <aside className="pip-companion" aria-label="Pip companion">
+    <aside className="peaches-companion" aria-label="Peaches companion">
       {open && (
         <section
-          className="pip-help panel"
+          className="peaches-help panel"
           role="dialog"
-          aria-labelledby="pip-help-title"
+          aria-labelledby="peaches-help-title"
           onKeyDown={(event) => {
             if (event.key === "Escape") close()
           }}
         >
-          <div className="pip-help-heading">
+          <div className="peaches-help-heading">
             <span>
-              <i className="pip-online" />
-              <strong id="pip-help-title">Ask Pip</strong>
+              <i className="peaches-online" />
+              <strong id="peaches-help-title">Ask Peaches</strong>
             </span>
-            <button type="button" onClick={close} aria-label="Close Pip help">
+            <button type="button" onClick={close} aria-label="Close Peaches help">
               ×
             </button>
           </div>
           <div
-            className="pip-help-log"
+            className="peaches-help-log"
             ref={log}
             role="log"
             aria-live="polite"
             aria-relevant="additions"
           >
-            <p className="pip-chat pip">
+            <p className="peaches-chat peaches">
               {context
                 ? "Hey! We can work through this together. Want a hint, an explanation, or to ask a question?"
                 : "Ready for another adventure? Start a mission and I'll help with each challenge."}
             </p>
             {messages.map((message, index) => (
-              <p className={`pip-chat ${message.who}`} key={index}>
-                <small>{message.who === "pip" ? "PIP" : "YOU"}</small>
+              <p className={`peaches-chat ${message.who}`} key={index}>
+                <small>{message.who === "peaches" ? "Peaches" : "YOU"}</small>
                 {message.text}
               </p>
             ))}
-            {busy && <p className="pip-chat pip">Thinking…</p>}
+            {busy && <p className="peaches-chat peaches">Thinking…</p>}
           </div>
           {context && (
             <>
-              <div className="pip-help-hints">
+              <div className="peaches-help-hints">
                 <button type="button" disabled={busy} onClick={() => hint()}>
                   Give me a hint
                 </button>
@@ -178,13 +178,13 @@ export default function PipCompanion({
                   Explain the idea
                 </button>
               </div>
-              <form onSubmit={ask} className="pip-help-form">
-                <label className="sr-only" htmlFor="pip-question">
-                  Your question for Pip
+              <form onSubmit={ask} className="peaches-help-form">
+                <label className="sr-only" htmlFor="peaches-question">
+                  Your question for Peaches
                 </label>
                 <input
                   ref={input}
-                  id="pip-question"
+                  id="peaches-question"
                   value={question}
                   maxLength={600}
                   onChange={(event) => setQuestion(event.target.value)}
@@ -194,24 +194,24 @@ export default function PipCompanion({
                 <button
                   type="submit"
                   disabled={busy || !question.trim()}
-                  aria-label="Send question to Pip"
+                  aria-label="Send question to Peaches"
                 >
                   ↑
                 </button>
               </form>
-              <p className="pip-help-privacy">
+              <p className="peaches-help-privacy">
                 Live questions go to Gemini. Keep personal details out.
               </p>
             </>
           )}
-          <div className="pip-settings">
+          <div className="peaches-settings">
             <label>
               Voice{" "}
               <select
-                aria-label="Pip voice"
+                aria-label="Peaches voice"
                 value={audio.voice}
                 onChange={(event) =>
-                  audio.chooseVoice(event.target.value as PipVoice)
+                  audio.chooseVoice(event.target.value as PeachesVoice)
                 }
               >
                 <option value="male">Male</option>
@@ -226,11 +226,11 @@ export default function PipCompanion({
               {audio.muted ? "Sound off" : "Sound on"}
             </button>
             <button type="button" onClick={() => void audio.hear()}>
-              Hear Pip
+              Hear Peaches
             </button>
           </div>
           {audio.audioError && (
-            <p className="pip-audio-note" role="status">
+            <p className="peaches-audio-note" role="status">
               {audio.audioError}
             </p>
           )}
@@ -238,22 +238,22 @@ export default function PipCompanion({
       )}
       <button
         ref={launcher}
-        className="pip-launcher"
+        className="peaches-launcher"
         type="button"
         aria-expanded={open}
-        aria-label={open ? "Close Pip help" : "Ask Pip for help"}
+        aria-label={open ? "Close Peaches help" : "Ask Peaches for help"}
         onClick={() => (open ? close() : setOpen(true))}
         onPointerEnter={() => setHover(true)}
         onPointerLeave={() => setHover(false)}
         onFocus={() => setHover(true)}
         onBlur={() => setHover(false)}
       >
-        <span className="pip-mini">
-          <Suspense fallback={<PipLoadingAvatar />}>
-            <PipAvatar wave={(open || hover) && mood === "idle"} mood={mood} reactionSerial={answerReaction ? reaction?.serial : 0} getLevel={audio.getLevel} />
+        <span className="peaches-mini">
+          <Suspense fallback={<PeachesLoadingAvatar />}>
+            <PeachesAvatar wave={(open || hover) && mood === "idle"} mood={mood} reactionSerial={answerReaction ? reaction?.serial : 0} getLevel={audio.getLevel} />
           </Suspense>
         </span>
-        <span className="pip-launcher-label">
+        <span className="peaches-launcher-label">
           {label}
         </span>
       </button>

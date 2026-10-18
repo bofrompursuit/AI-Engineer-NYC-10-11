@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react"
 import type { Package } from "@revenuecat/purchases-js"
-import PipPoster from "./PipPoster"
+import PeachesPoster from "./PeachesPoster"
 import { getJourney, type JourneyId } from "./journeys"
 import { buyPro, hasPro, isPremium, proPackages } from "./revenuecat"
 
@@ -52,11 +52,11 @@ export default function ProGate({ id, onBack, onFree, children }: { id: JourneyI
         <span className="case-id">UNFOLD PRO</span>
       </div>
       <section className="journey-complete panel pro-gate" aria-labelledby="pro-title" aria-busy={status === "checking"}>
-        <span className="pro-gate-pip"><PipPoster /></span>
+        <span className="pro-gate-peaches"><PeachesPoster /></span>
         <span className="eyebrow">UNFOLD PRO JOURNEY</span>
         <h1 id="pro-title">{journey.title}</h1>
-        {status === "checking" && <p role="status">Pip is checking your pass…</p>}
-        {status === "error" && <p role="alert">Pip couldn't reach the store. Physics is still free while we sort it out.</p>}
+        {status === "checking" && <p role="status">Peaches is checking your pass…</p>}
+        {status === "error" && <p role="alert">Peaches couldn't reach the store. Physics is still free while we sort it out.</p>}
         {status === "locked" && (
           <>
             <p>{journey.description} Unlock every premium journey with Unfold Pro.</p>

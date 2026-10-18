@@ -65,7 +65,7 @@ export interface ScanRow {
   choices: string[];
   correctIndex: number;
   explanation: string;
-  pipLine: string;
+  peachesLine: string;
   articles: Article[];
 }
 
@@ -87,7 +87,7 @@ export async function insertScan(row: ScanRow): Promise<number> {
       JSON.stringify(row.choices),
       row.correctIndex,
       row.explanation,
-      row.pipLine,
+      row.peachesLine,
       JSON.stringify(row.articles),
     ],
   );

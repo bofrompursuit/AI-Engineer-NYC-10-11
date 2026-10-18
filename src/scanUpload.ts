@@ -8,7 +8,7 @@ export interface ScanResult {
   choices: string[];
   correctIndex: number;
   explanation: string;
-  pipLine: string;
+  peachesLine: string;
   articles: { title: string; url: string; snippet: string }[];
 }
 
@@ -101,7 +101,7 @@ function isScanResult(value: unknown): value is ScanResult {
   if (!value || typeof value !== "object") return false;
   const result = value as ScanResult;
   return ["physics", "calculus", "biopharma", "general"].includes(result.subject)
-    && [result.concept, result.description, result.question, result.explanation, result.pipLine].every((text) => typeof text === "string")
+    && [result.concept, result.description, result.question, result.explanation, result.peachesLine].every((text) => typeof text === "string")
     && Array.isArray(result.choices) && result.choices.length === 4 && result.choices.every((choice) => typeof choice === "string")
     && Number.isInteger(result.correctIndex) && result.correctIndex >= 0 && result.correctIndex < 4
     && Array.isArray(result.detections) && result.detections.every((d) => d && typeof d.label === "string"
@@ -120,9 +120,9 @@ export async function requestScan(image: string, mimeType: string, signal: Abort
   if (response.status === 413) throw new Error("This photo is too large to scan. Try a smaller image or a closer crop.");
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body && typeof body.error === "string" ? body.error : `Pip couldn't finish this scan (error ${response.status}). Please try again.`);
+    throw new Error(body && typeof body.error === "string" ? body.error : `Peaches couldn't finish this scan (error ${response.status}). Please try again.`);
   }
   const result: unknown = await response.json().catch(() => null);
-  if (!isScanResult(result)) throw new Error("Pip couldn't read the scan result. Please try again with a clear photo.");
+  if (!isScanResult(result)) throw new Error("Peaches couldn't read the scan result. Please try again with a clear photo.");
   return result;
 }

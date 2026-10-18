@@ -2,12 +2,12 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEven
 import { QRCodeSVG } from "qrcode.react";
 import ScanScreen from "./ScanScreen";
 import { journeys, type JourneyId } from "./journeys";
-import usePipVoice from "./usePipVoice";
-import PipWelcome from "./PipWelcome";
+import usePeachesVoice from "./usePeachesVoice";
+import PeachesWelcome from "./PeachesWelcome";
 import type { HelpContext } from "./JourneyPlayer";
 import { playArcadeSound } from "./arcadeAudio";
-import { pipReactionDuration, type PipReaction, type PipReactionKind } from "./pipBehavior";
-const PipCompanion = lazy(() => import("./PipConversation"));
+import { peachesReactionDuration, type PeachesReaction, type PeachesReactionKind } from "./peachesBehavior";
+const PeachesCompanion = lazy(() => import("./PeachesConversation"));
 const JourneyPlayer = lazy(() => import("./JourneyPlayer"));
 const ProGate = lazy(() => import("./ProGate"));
 const Celebration = lazy(() => import("./Celebration"));
@@ -139,7 +139,7 @@ const games = [
     tag: "SCAN-TO-LEARN",
     title: "SCAN & LEARN",
     subtitle: "SNAP · LEARN · SAVE",
-    description: "Point your camera at anything real-world and Pip turns it into a quick challenge.",
+    description: "Point your camera at anything real-world and Peaches turns it into a quick challenge.",
     sponsor: "Gemini + Nimble + Tiger Data",
     sponsorDetail: "Vision · search · history",
     progress: "New · any subject",
@@ -425,7 +425,7 @@ function JoinScreen({ onJoined, muted, toggleMute }: { onJoined: () => void; mut
               <div className="hh-card hh-success" role="status">
                 <small>PLAYER SPAWNED</small>
                 <strong>{player}</strong>
-                <span>Press A to meet Pip</span>
+                <span>Press A to meet Peaches</span>
               </div>
             ) : (
               <div className="hh-card hh-qr">
@@ -465,7 +465,7 @@ function JoinScreen({ onJoined, muted, toggleMute }: { onJoined: () => void; mut
           </div>
           <div className="ab">
             <button type="button" className="ab-b" onClick={reset} aria-label="B: reset">B</button>
-            <button type="submit" className="ab-a" aria-label={player ? "A: meet Pip" : "A: sign in"}>A</button>
+            <button type="submit" className="ab-a" aria-label={player ? "A: meet Peaches" : "A: sign in"}>A</button>
           </div>
         </div>
         <div className="hh-bottom">
@@ -488,12 +488,12 @@ export default function App() {
   const [journeyId, setJourneyId] = useState<JourneyId>(initialMission);
   const [view, setViewState] = useState<View>(() => requested.get("view") === "journey" ? "journey" : requested.get("view") === "scan" ? "scan" : requested.get("view") === "bingo" ? "bingo" : requested.get("view") === "hub" ? "dashboard" : "join");
   const [context, setContext] = useState<HelpContext | null>(null);
-  const [scanContext, setScanContext] = useState("Choose a photo to make a learning challenge. No photo is shared with Pip's conversation.");
+  const [scanContext, setScanContext] = useState("Choose a photo to make a learning challenge. No photo is shared with Peaches' conversation.");
   const [bingoContext, setBingoContext] = useState("Choose a square, solve its math problem, and stamp four in a row.");
   const bingoFrame = useRef<HTMLIFrameElement>(null);
   const [celebration, setCelebration] = useState<{ kind: "answer" | "complete"; serial: number } | null>(null);
-  const [reaction, setReaction] = useState<PipReaction | null>(null);
-  const audio = usePipVoice();
+  const [reaction, setReaction] = useState<PeachesReaction | null>(null);
+  const audio = usePeachesVoice();
   const setView = useCallback((next: View) => {
     audio.stop();
     if (next === "scan") audio.prepare("scan");
@@ -515,31 +515,31 @@ export default function App() {
     url.searchParams.set("view", "journey"); url.searchParams.set("mission", id);
     window.history.replaceState(null, "", url);
   }, [setView]);
-  const reactToAnswer = useCallback((kind: PipReactionKind, questionId: string) => {
+  const reactToAnswer = useCallback((kind: PeachesReactionKind, questionId: string) => {
     setReaction((previous) => ({ kind, questionId, serial: (previous?.serial || 0) + 1 }));
     if (kind === "retry") setCelebration(null);
     else setCelebration((previous) => ({ kind: kind === "complete" ? "complete" : "answer", serial: (previous?.serial || 0) + 1 }));
   }, []);
   useEffect(() => {
     if (!reaction) return;
-    const timer = window.setTimeout(() => setReaction(null), pipReactionDuration[reaction.kind]);
+    const timer = window.setTimeout(() => setReaction(null), peachesReactionDuration[reaction.kind]);
     return () => clearTimeout(timer);
   }, [reaction]);
   const clearCelebration = useCallback(() => setCelebration(null), []);
   useEffect(() => {
     if (view === "join") {
-      void import("./PipAvatar");
-      void import("./pipAssets").then((assets) => assets.preloadPipModels()).catch(() => {});
-      const poster = new Image(); poster.src = "/images/pip-loading.png";
+      void import("./PeachesAvatar");
+      void import("./peachesAssets").then((assets) => assets.preloadPeachesModels()).catch(() => {});
+      const poster = new Image(); poster.src = "/images/peaches-loading.png";
       audio.preload();
     }
   }, [view, audio.preload]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== bingoFrame.current?.contentWindow) return;
-      if (event.data?.type === "pip-bingo-context" && typeof event.data.text === "string")
+      if (event.data?.type === "peaches-bingo-context" && typeof event.data.text === "string")
         setBingoContext(event.data.text.slice(0, 500));
-      if (event.data?.type === "pip-bingo-back") setView("dashboard");
+      if (event.data?.type === "peaches-bingo-back") setView("dashboard");
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
@@ -556,16 +556,16 @@ export default function App() {
   return (
     <div className="app-shell">
       {view !== "welcome" && view !== "join" && <Header view={view} setView={setView} />}
-      <Suspense fallback={<main className="pip-screen-loading" role="status">Pip is getting ready…</main>}>
-        {view === "welcome" && <PipWelcome audio={audio} onChoose={openJourney} onScan={() => setView("scan")} onBingo={() => setView("bingo")} />}
+      <Suspense fallback={<main className="peaches-screen-loading" role="status">Peaches is getting ready…</main>}>
+        {view === "welcome" && <PeachesWelcome audio={audio} onChoose={openJourney} onScan={() => setView("scan")} onBingo={() => setView("bingo")} />}
         {view === "dashboard" && <Dashboard openCase={() => setView("case")} openAnalytics={() => setView("analytics")} openJoin={() => setView("join")} openJourney={openJourney} openScan={() => setView("scan")} openBingo={() => setView("bingo")} />}
         {(view === "journey" || view === "case") && <ProGate key={activeJourney} id={activeJourney} onBack={() => setView("dashboard")} onFree={() => openJourney("physics")}><JourneyPlayer id={activeJourney} onBack={() => setView("dashboard")} onContext={setContext} onReaction={reactToAnswer} /></ProGate>}
         {view === "analytics" && <AnalyticsScreen goBack={() => setView("dashboard")} />}
         {view === "join" && <JoinScreen muted={audio.muted} toggleMute={audio.toggleMute} onJoined={() => { setView("welcome"); audio.prepare(); }} />}
-        {view === "scan" && <ScanScreen audio={audio} goBack={() => setView("dashboard")} onPipContext={setScanContext} />}
-        {view === "bingo" && <main className="pip-bingo-page"><iframe ref={bingoFrame} title="TINY Math Bingo" src="/bingo/index.html" /></main>}
+        {view === "scan" && <ScanScreen audio={audio} goBack={() => setView("dashboard")} onPeachesContext={setScanContext} />}
+        {view === "bingo" && <main className="peaches-bingo-page"><iframe ref={bingoFrame} title="TINY Math Bingo" src="/bingo/index.html" /></main>}
       </Suspense>
-      <Suspense fallback={null}><PipCompanion context={view === "journey" || view === "case" ? context : null} pageContext={pageContext} audio={audio} reaction={reaction} compact={view === "welcome" || view === "join"} /></Suspense>
+      <Suspense fallback={null}><PeachesCompanion context={view === "journey" || view === "case" ? context : null} pageContext={pageContext} audio={audio} reaction={reaction} compact={view === "welcome" || view === "join"} /></Suspense>
       {celebration && <Suspense fallback={null}><Celebration key={celebration.serial} kind={celebration.kind} onDone={clearCelebration} /></Suspense>}
     </div>
   );

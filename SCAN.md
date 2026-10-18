@@ -13,7 +13,7 @@ If you're an agent picking this up mid-hackathon: read this before touching
 1. User uploads/takes a photo on the **Upload** sub-view.
 2. **Gemini** (vision) looks at the photo and returns: 1-3 bounding boxes, an educational
    concept, a 4-choice quiz question about it, the correct answer + explanation, and a short
-   "PIP" (the app's guide persona) encouragement line.
+   "Peaches" (the app's guide persona) encouragement line.
 3. The photo is redrawn client-side on a `<canvas>` with the boxes + labels overlaid
    (`AnnotatedImage.tsx`) — this is NOT server-side image processing, it's pure browser Canvas2D.
 4. **Nimble** search fetches the top 3 real articles about the detected concept.

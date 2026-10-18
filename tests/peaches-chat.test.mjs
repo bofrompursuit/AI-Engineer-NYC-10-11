@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import handler from "../api/pip-chat.js"
-import { mockPipBudget } from "./pip-budget-mock.mjs"
+import handler from "../api/peaches-chat.js"
+import { mockPeachesBudget } from "./peaches-budget-mock.mjs"
 
 let address = 0
 async function call(body, headers = {}, method = "POST") {
@@ -12,11 +12,11 @@ async function call(body, headers = {}, method = "POST") {
     status(code) { this.statusCode = code; return this },
     json(value) { this.body = value; return this },
   }
-  await handler({ method, headers: { host: "unfold.test", "x-forwarded-for": `pip-chat-test-${++address}`, ...headers }, body }, response)
+  await handler({ method, headers: { host: "unfold.test", "x-forwarded-for": `peaches-chat-test-${++address}`, ...headers }, body }, response)
   return response
 }
 function configure(t, allowed = true) {
-  mockPipBudget(t, allowed)
+  mockPeachesBudget(t, allowed)
   const previous = process.env.GEMINI_API_KEY
   process.env.GEMINI_API_KEY = "test-only-secret"
   t.after(() => { if (previous === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = previous })

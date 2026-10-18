@@ -1,8 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { getJourney, type JourneyId } from "./journeys"
-import { greeting, type PipAudio, type PipVoice } from "./usePipVoice"
-import { PipLoadingAvatar } from "./PipPoster"
-const PipAvatar = lazy(() => import("./PipAvatar"))
+import { greeting, type PeachesAudio, type PeachesVoice } from "./usePeachesVoice"
+import { PeachesLoadingAvatar } from "./PeachesPoster"
+const PeachesAvatar = lazy(() => import("./PeachesAvatar"))
 
 type Choice = JourneyId | "scan" | "bingo"
 const choices: { id: Choice; letter: string; name: string; description: string; accent: string }[] = [
@@ -23,13 +23,13 @@ const choices: { id: Choice; letter: string; name: string; description: string; 
   },
 ]
 
-export default function PipWelcome({
+export default function PeachesWelcome({
   audio,
   onChoose,
   onScan,
   onBingo,
 }: {
-  audio: PipAudio
+  audio: PeachesAudio
   onChoose: (id: JourneyId) => void
   onScan: () => void
   onBingo: () => void
@@ -61,7 +61,7 @@ export default function PipWelcome({
     const timer = window.setTimeout(avatarSettled, 10000)
     return () => clearTimeout(timer)
   }, [avatarReady, avatarSettled])
-  const speak = useCallback(async (voice: PipVoice, force = false) => {
+  const speak = useCallback(async (voice: PeachesVoice, force = false) => {
     if (audio.liveSession) return
     clearTimeout(choiceTimer.current)
     const current = ++speechRequest.current
@@ -119,18 +119,18 @@ export default function PipWelcome({
   }
 
   return (
-    <main className="join pip-welcome">
+    <main className="join peaches-welcome">
       <section
-        className={`handheld pip-handheld phase-${phase}`}
-        aria-labelledby="pip-welcome-title"
+        className={`handheld peaches-handheld phase-${phase}`}
+        aria-labelledby="peaches-welcome-title"
       >
         <div className="hh-bezel">
           <div className="hh-progress">
             <span className="hh-title">
-              <i className="pip-online" /> PIP ONLINE
+              <i className="peaches-online" /> Peaches ONLINE
             </span>
-            <h1 id="pip-welcome-title" ref={heading} tabIndex={-1}>
-              {phase === "loading" ? "Here comes Pip…" : phase === "greeting"
+            <h1 id="peaches-welcome-title" ref={heading} tabIndex={-1}>
+              {phase === "loading" ? "Here comes Peaches…" : phase === "greeting"
                 ? "Hey, you're in!"
                 : phase === "leaving"
                   ? "Let's go!"
@@ -144,8 +144,8 @@ export default function PipWelcome({
               <i />
             </span>
           </div>
-          <div className="hh-screen pip-stage">
-            <div className="pip-pixels" aria-hidden="true">
+          <div className="hh-screen peaches-stage">
+            <div className="peaches-pixels" aria-hidden="true">
               <i />
               <i />
               <i />
@@ -153,23 +153,23 @@ export default function PipWelcome({
               <i />
               <i />
             </div>
-            <span className="pip-stage-label" aria-hidden="true">
+            <span className="peaches-stage-label" aria-hidden="true">
               COMPANION / 01
             </span>
-            <div className="pip-flight" ref={flight}>
+            <div className="peaches-flight" ref={flight}>
               <Suspense
                 fallback={
-                  <PipLoadingAvatar />
+                  <PeachesLoadingAvatar />
                 }
               >
-                <PipAvatar wave={phase === "greeting"} mood={audio.playing ? "speaking" : "idle"} getLevel={audio.getLevel} onReady={avatarSettled} />
+                <PeachesAvatar wave={phase === "greeting"} mood={audio.playing ? "speaking" : "idle"} getLevel={audio.getLevel} onReady={avatarSettled} />
               </Suspense>
             </div>
-            <span className="pip-stage-ground" aria-hidden="true" />
+            <span className="peaches-stage-ground" aria-hidden="true" />
           </div>
         </div>
-        <div className="pip-dialogue" aria-live="polite">
-          <span className="pip-speaker">PIP</span>
+        <div className="peaches-dialogue" aria-live="polite">
+          <span className="peaches-speaker">Peaches</span>
           <p>
             {phase === "loading" ? "I'm floating in! Get ready to pick your adventure." : phase === "greeting"
               ? greeting
@@ -198,7 +198,7 @@ export default function PipWelcome({
             ))}
           </div>
         )}
-        <div className="pip-welcome-controls">
+        <div className="peaches-welcome-controls">
           <button
             type="button"
             onClick={() => { pendingHear.current = false; setQueued(false); audio.toggleMute() }}
@@ -209,10 +209,10 @@ export default function PipWelcome({
           <label>
             Voice{" "}
             <select
-              aria-label="Pip voice"
+              aria-label="Peaches voice"
               value={audio.voice}
               onChange={(event) => {
-                const voice = event.target.value as PipVoice
+                const voice = event.target.value as PeachesVoice
                 audio.chooseVoice(voice)
                 if (phase === "greeting") void speak(voice)
               }}
@@ -221,7 +221,7 @@ export default function PipWelcome({
               <option value="female">Female</option>
             </select>
           </label>
-          <button type="button" className="pip-hear" disabled={phase === "leaving" || audio.liveSession} onClick={hear}>Hear Pip</button>
+          <button type="button" className="peaches-hear" disabled={phase === "leaving" || audio.liveSession} onClick={hear}>Hear Peaches</button>
           {phase === "greeting" || phase === "loading" ? (
             <button type="button" onClick={skip}>
               Skip greeting →
@@ -229,13 +229,13 @@ export default function PipWelcome({
           ) : null}
         </div>
         {audio.audioError && (
-          <p className="pip-audio-note" role="status">
+          <p className="peaches-audio-note" role="status">
             {audio.audioError}
           </p>
         )}
-        {queued && <p className="pip-audio-note" role="status">I'll speak as soon as my entrance is ready.</p>}
+        {queued && <p className="peaches-audio-note" role="status">I'll speak as soon as my entrance is ready.</p>}
         <span className="sr-only" role="status">
-          {audio.playing ? "Pip is speaking" : ""}
+          {audio.playing ? "Peaches is speaking" : ""}
         </span>
         <div className="hh-bottom" aria-hidden="true">
           <span>SELECT</span>

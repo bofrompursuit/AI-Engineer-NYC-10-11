@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import type { PipMood } from "./pipBehavior"
+import type { PeachesMood } from "./peachesBehavior"
 
 // WebGL motion values are shared by the welcome and corner avatar.
 const motion = {
@@ -60,7 +60,7 @@ function wrapAt(model: THREE.Object3D, object: THREE.Object3D, center: THREE.Vec
   return pivot
 }
 
-export function createPipMotion(model: THREE.Object3D) {
+export function createPeachesMotion(model: THREE.Object3D) {
   const leftEye = facialGroup(model, "Eye_L", ["blinkLeft", "happyLeft"])
   const rightEye = facialGroup(model, "Eye_R", ["blinkRight", "happyRight"])
   const mouth = facialGroup(model, "Mouth_Neutral", ["mouthClosed", "mouthOpen", "mouthRound", "smile"])
@@ -79,7 +79,7 @@ export function createPipMotion(model: THREE.Object3D) {
   })
   const rotation = new THREE.Quaternion()
   const axis = new THREE.Vector3(0, 0, 1)
-  let lastMood: PipMood = "idle"
+  let lastMood: PeachesMood = "idle"
   let lastSequence = 0
   let moodStarted = 0
   let blinkStarted = -1
@@ -89,7 +89,7 @@ export function createPipMotion(model: THREE.Object3D) {
   let leftArm = 0
   let rightArm = 0
 
-  const update = (elapsed: number, delta: number, mood: PipMood, level: number, waving: boolean, reduced: boolean, sequence = 0) => {
+  const update = (elapsed: number, delta: number, mood: PeachesMood, level: number, waving: boolean, reduced: boolean, sequence = 0) => {
     if (mood !== lastMood || sequence !== lastSequence) {
       lastMood = mood
       lastSequence = sequence

@@ -1,4 +1,4 @@
-import { pipDailyLimit, reservePipBudget } from "../lib/pip-budget.js"
+import { peachesDailyLimit, reservePeachesBudget } from "../lib/peaches-budget.js"
 
 const recent = new Map()
 
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   if (origin) {
     try {
       if (new URL(origin).host !== req.headers.host)
-        return res.status(403).json({ error: "Open Pip from this site" })
+        return res.status(403).json({ error: "Open Peaches from this site" })
     } catch {
       return res.status(403).json({ error: "Invalid origin" })
     }
@@ -30,10 +30,10 @@ export default async function handler(req, res) {
   const key = process.env.ELEVENLABS_API_KEY
   const agentId = process.env.ELEVENLABS_AGENT_ID
   if (!key || !agentId || !/^agent_[a-zA-Z0-9]+$/.test(agentId) || process.env.PIP_AGENT_ENABLED !== "true")
-    return res.status(503).json({ error: "Pip's live conversation is not configured" })
+    return res.status(503).json({ error: "Peaches' live conversation is not configured" })
   const maxSeconds = Number(process.env.PIP_VOICE_MAX_SECONDS || 120)
   if (!Number.isSafeInteger(maxSeconds) || maxSeconds < 60 || maxSeconds > 300)
-    return res.status(503).json({ error: "Pip's voice duration limit is misconfigured" })
+    return res.status(503).json({ error: "Peaches' voice duration limit is misconfigured" })
 
   const now = Date.now()
   for (const [address, times] of recent)
@@ -45,12 +45,12 @@ export default async function handler(req, res) {
   times.push(now)
   recent.set(address, times)
 
-  const dailyLimit = pipDailyLimit("PIP_VOICE_DAILY_LIMIT", 3)
-  if (dailyLimit === null) return res.status(503).json({ error: "Pip's daily limit is misconfigured" })
+  const dailyLimit = peachesDailyLimit("PIP_VOICE_DAILY_LIMIT", 3)
+  if (dailyLimit === null) return res.status(503).json({ error: "Peaches' daily limit is misconfigured" })
   try {
-    const budget = await reservePipBudget("voice", dailyLimit)
-    if (!budget.allowed) return res.status(429).json({ error: "Pip's voice limit is reached for today. Try tomorrow." })
-  } catch { return res.status(503).json({ error: "Pip's daily limit is unavailable. Try again later." }) }
+    const budget = await reservePeachesBudget("voice", dailyLimit)
+    if (!budget.allowed) return res.status(429).json({ error: "Peaches' voice limit is reached for today. Try tomorrow." })
+  } catch { return res.status(503).json({ error: "Peaches' daily limit is unavailable. Try again later." }) }
 
   const url = `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`
   try {
@@ -58,12 +58,12 @@ export default async function handler(req, res) {
       headers: { "xi-api-key": key },
       signal: AbortSignal.timeout(10000),
     })
-    if (!response.ok) return res.status(502).json({ error: "Pip could not start a conversation" })
+    if (!response.ok) return res.status(502).json({ error: "Peaches could not start a conversation" })
     const data = await response.json()
     if (typeof data.token === "string" && data.token)
       return res.status(200).json({ conversationToken: data.token, maxSeconds })
-    return res.status(502).json({ error: "Pip could not start a conversation" })
+    return res.status(502).json({ error: "Peaches could not start a conversation" })
   } catch {
-    return res.status(502).json({ error: "Pip could not start a conversation" })
+    return res.status(502).json({ error: "Peaches could not start a conversation" })
   }
 }

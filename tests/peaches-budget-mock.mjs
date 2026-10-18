@@ -1,6 +1,6 @@
 import pg from "pg"
 
-export function mockPipBudget(t, allowed = true) {
+export function mockPeachesBudget(t, allowed = true) {
   const previous = Object.fromEntries(["TIGER_HOST", "TIGER_DB", "TIGER_USER", "TIGER_PASSWORD"].map((name) => [name, process.env[name]]))
   process.env.TIGER_HOST = "db.test"
   process.env.TIGER_DB = "test"

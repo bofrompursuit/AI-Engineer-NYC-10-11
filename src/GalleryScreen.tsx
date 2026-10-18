@@ -47,7 +47,7 @@ export default function GalleryScreen({ refreshKey }: { refreshKey?: number }) {
         </section>
       )}
 
-      {error && <p className="pip-error">Couldn't load history: {error}</p>}
+      {error && <p className="peaches-error">Couldn't load history: {error}</p>}
       {rows && rows.length === 0 && <p style={{ color: "var(--muted)" }}>No scans yet — switch to Upload and scan something first.</p>}
 
       {rows && rows.length > 0 && (
@@ -56,7 +56,7 @@ export default function GalleryScreen({ refreshKey }: { refreshKey?: number }) {
             <article className="gallery-card" key={row.id}>
               <img src={`data:${row.mimeType};base64,${row.imageBase64}`} alt={row.concept} />
               <div className="gallery-card-body">
-                <span className="pip-subject-tag">{row.subject}</span>
+                <span className="peaches-subject-tag">{row.subject}</span>
                 <strong>{row.concept}</strong>
                 <p>{row.question}</p>
                 <div className="gallery-card-foot">

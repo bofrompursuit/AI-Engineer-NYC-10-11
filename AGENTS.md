@@ -2,13 +2,13 @@
 
 React + Vite + Tailwind CSS project running inside Figma Make.
 
-## PIP mascot identity
+## Peaches mascot identity
 
-- PIP is Unfold's existing floating robot mascot: the dark body, white face, and yellow chest marks shown by `src/PipAvatar.tsx` and the approved PIP assets.
-- Use this same mascot everywhere PIP appears. Nothing replaces it, and no other character, SVG face, sparkle, glyph, emoji, or generic icon may be called PIP.
-- Reuse `src/PipAvatar.tsx` for the animated mascot and `src/PipPoster.tsx` / `public/images/pip-loading.png` for its matching still or loading fallback. Reuse the existing models, expressions, and behavior in `src/pipAssets.ts`, `src/pipBehavior.ts`, and `src/pipMotion.ts`.
-- A lightweight view must still show the actual PIP. Use the approved still when animation is unavailable; do not substitute another mascot.
-- Keep PIP large enough to recognize. Verify the rendered result at desktop and phone widths, including loading and fallback states, before claiming PIP is visible.
+- Peaches is Unfold's floating cat mascot: the dark body, white face, pointed ears, peach nose, whiskers, tail, and white cat-face chest emblem shown by `src/PeachesAvatar.tsx` and the approved Peaches assets.
+- Use this same mascot everywhere Peaches appears. Nothing replaces it, and no other character, SVG face, sparkle, glyph, emoji, or generic icon may be called Peaches.
+- Reuse `src/PeachesAvatar.tsx` for the animated mascot and `src/PeachesPoster.tsx` / `public/images/peaches-loading.png` for its matching still or loading fallback. Reuse the existing models, expressions, and behavior in `src/peachesAssets.ts`, `src/peachesBehavior.ts`, and `src/peachesMotion.ts`.
+- A lightweight view must still show the actual Peaches. Use the approved still when animation is unavailable; do not substitute another mascot.
+- Keep Peaches large enough to recognize. Verify the rendered result at desktop and phone widths, including loading and fallback states, before claiming Peaches is visible.
 - A future mascot replacement or redesign requires the user's explicit instruction. Routine UI work does not authorize it.
 
 ## Development Server

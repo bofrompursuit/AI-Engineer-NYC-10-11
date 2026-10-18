@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-export type PipVoice = "male" | "female"
-type PipGreeting = "welcome" | "scan"
-export const scanGreeting = "Hi, I'm PIP! Point your camera at anything you're curious about — a sign, a gadget, a plant, a formula on a whiteboard — and I'll turn it into a quick challenge."
-export const greeting = "Hey, I'm Pip! Ready to learn something new? Pick an adventure. I'll be right here if you need a hand. Let's go!"
+export type PeachesVoice = "male" | "female"
+type PeachesGreeting = "welcome" | "scan"
+export const scanGreeting = "Hi, I'm Peaches! Point your camera at anything you're curious about — a sign, a gadget, a plant, a formula on a whiteboard — and I'll turn it into a quick challenge."
+export const greeting = "Hey, I'm Peaches! Ready to learn something new? Pick an adventure. I'll be right here if you need a hand. Let's go!"
 function saved(key: string) { try { return localStorage.getItem(key) } catch { return null } }
 function save(key: string, value: string) { try { localStorage.setItem(key, value) } catch { /* Preferences are optional. */ } }
 
@@ -17,12 +17,12 @@ function context() {
   }
   return speechContext
 }
-function loadClip(voice: PipVoice, greetingKind: PipGreeting) {
+function loadClip(voice: PeachesVoice, greetingKind: PeachesGreeting) {
   const key = `${greetingKind}-${voice}`
   let loaded = clips.get(key)
   if (!loaded) {
     const engine = context()
-    loaded = fetch(`/audio/pip-${greetingKind}-${voice}.mp3`, { signal: AbortSignal.timeout(12000) })
+    loaded = fetch(`/audio/peaches-${greetingKind}-${voice}.mp3`, { signal: AbortSignal.timeout(12000) })
       .then((response) => { if (!response.ok) throw new Error("Audio unavailable"); return response.arrayBuffer() })
       .then((bytes) => engine.decodeAudioData(bytes))
       .catch((error) => { clips.delete(key); throw error })
@@ -31,9 +31,9 @@ function loadClip(voice: PipVoice, greetingKind: PipGreeting) {
   return loaded
 }
 
-export default function usePipVoice() {
-  const [voice, setVoice] = useState<PipVoice>(() => saved("pip-voice") === "female" ? "female" : "male")
-  const [muted, setMuted] = useState(() => saved("pip-muted") === "true")
+export default function usePeachesVoice() {
+  const [voice, setVoice] = useState<PeachesVoice>(() => saved("peaches-voice") === "female" ? "female" : "male")
+  const [muted, setMuted] = useState(() => saved("peaches-muted") === "true")
   const [playing, setPlaying] = useState(false)
   const [pending, setPending] = useState(false)
   const [audioError, setAudioError] = useState("")
@@ -67,16 +67,16 @@ export default function usePipVoice() {
     setPlaying(false)
     setPending(false)
   }, [disconnectMeter])
-  const preload = useCallback((greetingKind: PipGreeting = "welcome") => {
+  const preload = useCallback((greetingKind: PeachesGreeting = "welcome") => {
     try { void Promise.allSettled([loadClip("male", greetingKind), loadClip("female", greetingKind)]) }
-    catch { /* Hear Pip can retry when audio is unavailable. */ }
+    catch { /* Hear Peaches can retry when audio is unavailable. */ }
   }, [])
-  const prepare = useCallback((greetingKind: PipGreeting = "welcome") => {
-    // Resume directly from Enter/Hear Pip, then play later when the visual is ready.
+  const prepare = useCallback((greetingKind: PeachesGreeting = "welcome") => {
+    // Resume directly from Enter/Hear Peaches, then play later when the visual is ready.
     try { void context().resume().catch(() => {}); preload(greetingKind) }
     catch { /* Playback will show a useful error. */ }
   }, [preload])
-  const play = useCallback(async (selected = voice, force = false, greetingKind: PipGreeting = "welcome"): Promise<number> => {
+  const play = useCallback(async (selected = voice, force = false, greetingKind: PeachesGreeting = "welcome"): Promise<number> => {
     if (liveRef.current) return 0
     stop()
     setAudioError("")
@@ -89,7 +89,7 @@ export default function usePipVoice() {
       if (!force && engine.state === "suspended" && navigator.userActivation && !navigator.userActivation.hasBeenActive) {
         throw new Error("Audio needs a user gesture")
       }
-      // This also supports direct Hear Pip/voice-selection gestures.
+      // This also supports direct Hear Peaches/voice-selection gestures.
       const ready = Promise.all([loadClip(selected, greetingKind), engine.resume()])
       const [buffer] = await Promise.race([
         ready,
@@ -124,7 +124,7 @@ export default function usePipVoice() {
         source.current = null
         disconnectMeter()
         setPlaying(false)
-        setAudioError("Pip's greeting couldn't play. Tap Hear Pip to try again.")
+        setAudioError("Peaches' greeting couldn't play. Tap Hear Peaches to try again.")
       }
       return 0
     } finally {
@@ -132,17 +132,17 @@ export default function usePipVoice() {
       if (current === request.current) setPending(false)
     }
   }, [voice, muted, stop, disconnectMeter])
-  const chooseVoice = (next: PipVoice) => { stop(); setVoice(next); save("pip-voice", next) }
+  const chooseVoice = (next: PeachesVoice) => { stop(); setVoice(next); save("peaches-voice", next) }
   const toggleMute = () => {
     const next = !muted
     setMuted(next)
-    save("pip-muted", String(next))
+    save("peaches-muted", String(next))
     if (next) stop()
   }
-  const hear = (selected = voice, greetingKind: PipGreeting = "welcome") => {
+  const hear = (selected = voice, greetingKind: PeachesGreeting = "welcome") => {
     if (liveRef.current) return Promise.resolve(0)
     setMuted(false)
-    save("pip-muted", "false")
+    save("peaches-muted", "false")
     return play(selected, true, greetingKind)
   }
   const beginLive = useCallback(() => {
@@ -167,4 +167,4 @@ export default function usePipVoice() {
   }, [disconnectMeter])
   return { voice, muted, playing, pending, liveSession, audioError, getLevel, preload, prepare, play, hear, stop, beginLive, endLive, chooseVoice, toggleMute }
 }
-export type PipAudio = ReturnType<typeof usePipVoice>
+export type PeachesAudio = ReturnType<typeof usePeachesVoice>

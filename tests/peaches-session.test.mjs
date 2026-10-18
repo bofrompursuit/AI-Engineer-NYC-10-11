@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import handler from "../api/pip-session.js"
-import { mockPipBudget } from "./pip-budget-mock.mjs"
+import handler from "../api/peaches-session.js"
+import { mockPeachesBudget } from "./peaches-budget-mock.mjs"
 
 let address = 0
 async function call(body, headers = {}, method = "POST") {
@@ -16,7 +16,7 @@ async function call(body, headers = {}, method = "POST") {
   return response
 }
 function configure(t) {
-  mockPipBudget(t)
+  mockPeachesBudget(t)
   const previous = [process.env.ELEVENLABS_API_KEY, process.env.ELEVENLABS_AGENT_ID, process.env.PIP_AGENT_ENABLED]
   process.env.ELEVENLABS_API_KEY = "test-only-secret"
   process.env.ELEVENLABS_AGENT_ID = "agent_test123"

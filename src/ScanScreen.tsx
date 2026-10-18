@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import ScanUploadView from "./ScanUploadView";
 import GalleryScreen from "./GalleryScreen";
-import type { PipAudio } from "./usePipVoice";
+import type { PeachesAudio } from "./usePeachesVoice";
 
 type SubView = "upload" | "gallery";
 
-export default function ScanScreen({ goBack, audio, onPipContext }: { goBack: () => void; audio: PipAudio; onPipContext: (text: string) => void }) {
+export default function ScanScreen({ goBack, audio, onPeachesContext }: { goBack: () => void; audio: PeachesAudio; onPeachesContext: (text: string) => void }) {
   const [subView, setSubView] = useState<SubView>("upload");
   const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
   useEffect(() => {
-    if (subView === "gallery") onPipContext("Gallery of earlier scans. Help the learner understand what the gallery records. Do not claim to see a selected photo or live gallery data.");
-  }, [subView, onPipContext]);
+    if (subView === "gallery") onPeachesContext("Gallery of earlier scans. Help the learner understand what the gallery records. Do not claim to see a selected photo or live gallery data.");
+  }, [subView, onPeachesContext]);
 
   const goToGallery = () => {
     setGalleryRefreshKey((k) => k + 1);
@@ -29,7 +29,7 @@ export default function ScanScreen({ goBack, audio, onPipContext }: { goBack: ()
         <div>
           <span className="eyebrow"><i /> LEARNING OPS / SCAN</span>
           <div className="case-title">Scan <em>& learn.</em></div>
-          <p>Point your camera at anything real-world curious, answer PIP's question, and every scan lands in your gallery.</p>
+          <p>Point your camera at anything real-world curious, answer Peaches' question, and every scan lands in your gallery.</p>
         </div>
         <div className="range-control">
           <button className={subView === "upload" ? "active" : ""} type="button" onClick={() => { audio.prepare("scan"); setSubView("upload"); }}>
@@ -41,7 +41,7 @@ export default function ScanScreen({ goBack, audio, onPipContext }: { goBack: ()
         </div>
       </section>
 
-      {subView === "upload" && <ScanUploadView audio={audio} onViewGallery={goToGallery} onPipContext={onPipContext} />}
+      {subView === "upload" && <ScanUploadView audio={audio} onViewGallery={goToGallery} onPeachesContext={onPeachesContext} />}
       {subView === "gallery" && <GalleryScreen refreshKey={galleryRefreshKey} />}
     </main>
   );

@@ -50,5 +50,5 @@ export default function AnnotatedImage({ src, detections }: { src: string; detec
     img.src = src;
   }, [src, detections]);
 
-  return <canvas ref={canvasRef} className="pip-annotated-canvas" />;
+  return <canvas ref={canvasRef} className="peaches-annotated-canvas" />;
 }

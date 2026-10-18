@@ -23,11 +23,11 @@ export interface ScanResult {
   choices: string[];
   correctIndex: number;
   explanation: string;
-  pipLine: string;
+  peachesLine: string;
   articles: Article[];
 }
 
-const PROMPT = `You are PIP, a friendly Montessori-style learning guide for middle-school and teen students (ages 11-16). A student just pointed their camera at something in the real world because they were curious about it.
+const PROMPT = `You are Peaches, a friendly Montessori-style learning guide for middle-school and teen students (ages 11-16). A student just pointed their camera at something in the real world because they were curious about it.
 
 Look at the image and:
 1. Identify 1-3 notable regions in the image worth pointing out (objects, text, logos, diagrams — whatever is most relevant to the concept you'll teach). For each, give a short label and a bounding box.
@@ -35,7 +35,7 @@ Look at the image and:
 3. Write a short (1-2 sentence) description of what you see and why it's interesting, in an encouraging, curious tone.
 4. Write ONE multiple-choice question testing understanding of that concept, with exactly 4 answer choices where only one is correct.
 5. Write a 1-2 sentence explanation of why the correct answer is correct — this is shown to the student right after they answer, whether they got it right or wrong, so it must make sense standalone (restate the correct choice, don't say "as above").
-6. Write a short, upbeat one-line encouragement in PIP's voice to show specifically when the student answers correctly.
+6. Write a short, upbeat one-line encouragement in Peaches' voice to show specifically when the student answers correctly.
 
 Return ONLY a JSON object, no markdown fences, no commentary, in exactly this shape:
 {
@@ -47,7 +47,7 @@ Return ONLY a JSON object, no markdown fences, no commentary, in exactly this sh
   "choices": ["choice A", "choice B", "choice C", "choice D"],
   "correctIndex": 0,
   "explanation": "1-2 sentence standalone explanation of the correct answer",
-  "pipLine": "short encouraging line for a correct answer"
+  "peachesLine": "short encouraging line for a correct answer"
 }`;
 
 class RetryableError extends Error {}
@@ -186,7 +186,7 @@ export async function runScan(imageBase64: string, mimeType: string): Promise<Sc
       choices: result.choices,
       correctIndex: result.correctIndex,
       explanation: result.explanation,
-      pipLine: result.pipLine,
+      peachesLine: result.peachesLine,
       articles: result.articles,
     });
   } catch (e) {

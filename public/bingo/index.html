@@ -106,7 +106,7 @@
   </div>
 
 <script>
-  // Direct visits enter the React shell so Pip stays available during Bingo.
+  // Direct visits enter the React shell so Peaches stays available during Bingo.
   if (parent === window) location.replace("/?view=bingo");
   const COLS = ["T", "I", "N", "Y"];
   const TOPICS = ["Algebra & Linear", "Quadratics & Systems", "Exponents & Logs", "Geometry & Functions"];
@@ -204,7 +204,7 @@
       if (matchMedia("(pointer: fine)").matches) $("answer").focus();
     }
     renderBoard();
-    if (parent !== window) parent.postMessage({ type: "pip-bingo-context", text: `Square ${COLS[c]}${r + 1}. ${q}. ${stamped.has(active) ? `Solved. The answer is ${GRID[r][c].a}.` : "Not solved. Give a hint without revealing the answer."}` }, location.origin);
+    if (parent !== window) parent.postMessage({ type: "peaches-bingo-context", text: `Square ${COLS[c]}${r + 1}. ${q}. ${stamped.has(active) ? `Solved. The answer is ${GRID[r][c].a}.` : "Not solved. Give a hint without revealing the answer."}` }, location.origin);
     $("panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
@@ -247,7 +247,7 @@
     stamped.clear(); wins.clear(); active = null; save();
     $("answerForm").classList.add("hidden"); $("done").classList.add("hidden"); $("empty").classList.remove("hidden");
     renderBoard();
-    if (parent !== window) parent.postMessage({ type: "pip-bingo-context", text: "The board was reset. Help the learner choose and solve a square." }, location.origin);
+    if (parent !== window) parent.postMessage({ type: "peaches-bingo-context", text: "The board was reset. Help the learner choose and solve a square." }, location.origin);
   }
 
   function buildKeypad() {
@@ -296,7 +296,7 @@
   $("backToUnfold").addEventListener("click", (event) => {
     if (parent === window) return;
     event.preventDefault();
-    parent.postMessage({ type: "pip-bingo-back" }, location.origin);
+    parent.postMessage({ type: "peaches-bingo-back" }, location.origin);
   });
   $("answer").addEventListener("input", () => setFeedback(""));
   $("reset").addEventListener("click", () => { if (confirm("Clear every stamp and start over?")) resetGame(); });

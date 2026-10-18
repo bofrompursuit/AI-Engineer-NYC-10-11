@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
-import PipPoster from "./PipPoster"
-import { createPipScene, preloadPipModels } from "./pipAssets"
-import { createPipMotion } from "./pipMotion"
-import type { PipMood } from "./pipBehavior"
+import PeachesPoster from "./PeachesPoster"
+import { createPeachesScene, preloadPeachesModels } from "./peachesAssets"
+import { createPeachesMotion } from "./peachesMotion"
+import type { PeachesMood } from "./peachesBehavior"
 
 const waveFade = 0.3
 const silence = () => 0
 
-export default function PipAvatar({ wave = false, mood = "idle", reactionSerial = 0, getLevel = silence, onReady }: {
+export default function PeachesAvatar({ wave = false, mood = "idle", reactionSerial = 0, getLevel = silence, onReady }: {
   wave?: boolean
-  mood?: PipMood
+  mood?: PeachesMood
   reactionSerial?: number
   getLevel?: () => number
   onReady?: () => void
@@ -32,13 +32,13 @@ export default function PipAvatar({ wave = false, mood = "idle", reactionSerial 
     let revealTimer = 0
     let cleanup = () => {}
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)")
-    void preloadPipModels().then((loaded) => {
+    void preloadPeachesModels().then((loaded) => {
       if (disposed) return
       let renderer: THREE.WebGLRenderer
       try { renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }) }
       catch { readyCallback.current?.(); return }
-      const { scene, camera, rest, mixer, action, fit } = createPipScene(loaded)
-      const movement = createPipMotion(rest)
+      const { scene, camera, rest, mixer, action, fit } = createPeachesScene(loaded)
+      const movement = createPeachesMotion(rest)
       if (action) { action.setLoop(THREE.LoopOnce, 1); action.clampWhenFinished = true }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75))
       renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -110,8 +110,8 @@ export default function PipAvatar({ wave = false, mood = "idle", reactionSerial 
   }, [])
 
   return (
-    <div className={`pip-avatar ${ready ? "is-ready" : ""}`} data-pip-mood={mood} ref={mount} role="img" aria-label="Pip, your floating learning guide">
-      <PipPoster />
+    <div className={`peaches-avatar ${ready ? "is-ready" : ""}`} data-peaches-mood={mood} ref={mount} role="img" aria-label="Peaches, your floating learning guide">
+      <PeachesPoster />
     </div>
   )
 }

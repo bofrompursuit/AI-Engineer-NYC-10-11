@@ -19,7 +19,7 @@ const valid = {
   choices: ["Gravity", "Light", "Sound", "Heat"],
   correctIndex: 0,
   explanation: "Gravity attracts the ball toward Earth.",
-  pipLine: "You got it!",
+  peachesLine: "You got it!",
   articles: [],
 };
 

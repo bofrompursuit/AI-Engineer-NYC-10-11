@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import ConceptVisual, { hasConceptVisual } from "./ConceptVisual"
 import { getJourney, type JourneyId, type Question } from "./journeys"
-import type { PipReactionKind } from "./pipBehavior"
+import type { PeachesReactionKind } from "./peachesBehavior"
 
 export type HelpContext = {
   journeyId: JourneyId
@@ -17,7 +17,7 @@ export default function JourneyPlayer({
   id: JourneyId
   onBack: () => void
   onContext: (context: HelpContext | null) => void
-  onReaction: (kind: PipReactionKind, questionId: string) => void
+  onReaction: (kind: PeachesReactionKind, questionId: string) => void
 }) {
   const journey = getJourney(id)
   const [step, setStep] = useState(0)
@@ -145,7 +145,7 @@ export default function JourneyPlayer({
               </div>
               {learned ? (
                 <span className="journey-hint-label">
-                  Need a hint? Ask Pip in the corner.
+                  Need a hint? Ask Peaches in the corner.
                 </span>
               ) : (
                 <button
@@ -198,7 +198,7 @@ export default function JourneyPlayer({
                 ) : result === "retry" ? (
                   <>
                     <strong>Keep going—you can try again.</strong>
-                    <p>Check the field note or ask Pip for a hint.</p>
+                    <p>Check the field note or ask Peaches for a hint.</p>
                   </>
                 ) : (
                   <p>Pick an answer, then check it.</p>
